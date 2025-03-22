@@ -2,6 +2,8 @@
 /build
 .env
 
+mediasoup_demo/
+
 # compiled output
 /dist
 node_modules/
