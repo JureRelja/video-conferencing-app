@@ -8,9 +8,11 @@ export class SocketService {
   handleConnection(socket: Socket): void {
     const clientId = socket.id;
     this.connectedClients.set(clientId, socket);
+    console.log('Client connected', clientId);
 
     socket.on('disconnect', () => {
       this.connectedClients.delete(clientId);
+      console.log('Client disconected', clientId);
     });
 
     // Handle other events and messages from the client
