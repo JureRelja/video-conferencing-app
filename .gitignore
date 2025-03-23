@@ -5,10 +5,10 @@
 mediasoup_demo/
 
 # compiled output
-/dist
+dist/
 node_modules/
 node_modules/
-/build
+build/
 
 # Logs
 logs
@@ -78,11 +78,11 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /coverage
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
 
 # misc
 .DS_Store
@@ -103,3 +103,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+next.config.ts
