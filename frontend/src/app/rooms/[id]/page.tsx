@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 export default function Home() {
   const { id } = useParams<{ id: string }>();
-  const [total, setTotal] = useState<number>(0);
+  const [total, setTotal] = useState<number>(20);
 
   // Chat
   // const [message, setMessage] = useState<string>('');

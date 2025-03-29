@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Video({
   isModerator,
@@ -14,21 +14,17 @@ export default function Video({
   name: string;
   total: number;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [element, setElement] = useState<HTMLVideoElement | null>(null);
 
-  const handleStream = useCallback(
-    (stream: MediaStream) => {
-      console.log(videoRef.current);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      setStream(stream);
-    },
-    [videoRef],
-  );
+  const handleStream = (stream: MediaStream) => {
+    if (element) {
+      element.srcObject = stream;
+    }
+    setStream(stream);
+  };
 
-  const getLocalStream = useCallback(() => {
+  const getLocalStream = () => {
     navigator.mediaDevices
       .getUserMedia({
         video: true,
@@ -40,7 +36,7 @@ export default function Video({
       .catch((error) => {
         console.error('Error while accesing camera and microphone.', error);
       });
-  }, [handleStream]);
+  };
 
   useEffect(() => {
     if (isThisUser) {
@@ -50,7 +46,7 @@ export default function Video({
       // Assuming you have a function to handle remote streams
       // handleRemoteStream();s
     }
-  }, [isThisUser, getLocalStream]);
+  }, [isThisUser, element]);
 
   return (
     <div className="flex flex-col gap-5 justify-center items-center">
@@ -62,13 +58,13 @@ export default function Video({
             <p>Čekam video stream...</p>
           </div>
         ) : total < 5 ? (
-          <video ref={getLocalStream} autoPlay={true} controls={false} width="300px" height="500px" />
+          <video ref={setElement} autoPlay={true} controls={false} width="300px" />
         ) : total < 9 ? (
-          <video ref={getLocalStream} autoPlay={true} controls={false} width="150px" height="300px" />
+          <video ref={setElement} autoPlay={true} controls={false} width="280px" />
         ) : total < 19 ? (
-          <video ref={videoRef} autoPlay={true} controls={false} width="100px" height="150px" />
+          <video ref={setElement} autoPlay={true} controls={false} width="220px" />
         ) : (
-          <video ref={videoRef} autoPlay={true} controls={false} width="50px" height="80px" />
+          <video ref={setElement} autoPlay={true} controls={false} width="180px" />
         )}
       </div>
 
