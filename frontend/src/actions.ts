@@ -1,6 +1,6 @@
 'use server';
 
-import { Room } from './app/types/room';
+import { Room } from '@/types/room';
 
 export async function startCall(socketId: string, formData: FormData) {
   const participant = {

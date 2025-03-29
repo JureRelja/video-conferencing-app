@@ -1,11 +1,15 @@
 'use client';
 
 import socket from '@/socket/socket-io';
-import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import Video from '@/components/video/video';
+import { Input } from '@/components/ui/input';
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
 export default function Home() {
-  console.log('Socket:', socket);
+  const { id } = useParams<{ id: string }>();
+  const [total, setTotal] = useState<number>(0);
 
   // Chat
   // const [message, setMessage] = useState<string>('');
@@ -41,28 +45,68 @@ export default function Home() {
   // };
 
   return (
-    <div className="flex flex-col justify-center items-center gap-5">
-      {/* <div className="flex h-full gap-10 justify-between items-center">
-        <div className="flex flex-col gap-5 justify-center items-center">
-          <div className="flex gap-2">
-            {thisParticipantVideo && (
-              <div className="h-full w-full">
-                <video autoPlay={true} controls={false} ref={thisParticipantVideo} width="950px" height="800px" />
-                {thisParticipant && <p className="text-center">{thisParticipant.name}</p>}
-              </div>
-            )}
-
-            {remoteParticipantVideo && (
-              <div className="h-full w-full">
-                <video autoPlay={true} controls={false} ref={remoteParticipantVideo} width="950px" height="800px" />
-                {remoteParticipant && <p className="text-center">{remoteParticipant.name}</p>}
-              </div>
-            )}
-          </div>
-        </div> */}
-
+    <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       {/* Chat */}
-      {/* {!chatHidden ? (
+      <div className="flex flex-wrap gap-4 justify-around w-full">
+        <Video isModerator name="Jure" total={total} isThisUser />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+        <Video name="Ante" total={total} />
+        <Video name="Šime" total={total} />
+        <Video name="Stipe" total={total} />
+      </div>
+      {/* 
+      <div>
+      {!chatHidden ? (
           <div className="flex gap-2 justify-center items-center">
             <div className="flex flex-col justify-end items-end ">
               <Button label="Sakrij chat ->" onClick={() => setChatHidden(true)} />
@@ -110,18 +154,15 @@ export default function Home() {
       </div> */}
 
       {/* Invite */}
-      {/* <div className="flex items-center gap-2 w-full justify-center">
-        <input
-          value={`https://projektr-fer-frontend.onrender.com/?roomId=${params.id}`}
-          disabled
-          className="border-gray-400 border-2 bg-white p-2 "
-        />
+      <div className="flex items-center gap-2 justify-center w-fit">
+        <Input value={`https://projektr-fer-frontend.onrender.com/?roomId=${id}`} readOnly className="border-gray-400 border-2 bg-white p-2 " />
         <Button
           onClick={() => {
-            void navigator.clipboard.writeText(`https://projektr-fer-frontend.onrender.com/?roomId=${params.id}`);
-          }}
-        >Kopiraj link</Button>
-      </div> */}
+            void navigator.clipboard.writeText(`https://projektr-fer-frontend.onrender.com/?roomId=${id}`);
+          }}>
+          Kopiraj link
+        </Button>
+      </div>
     </div>
   );
 }
