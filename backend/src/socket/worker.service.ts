@@ -1,7 +1,5 @@
-import mediasoup from 'mediasoup';
-import { Injectable } from '@nestjs/common';
+import * as mediasoup from 'mediasoup';
 
-@Injectable()
 export class WorkerService {
   static worker: mediasoup.types.Worker<mediasoup.types.AppData> | null = null;
 

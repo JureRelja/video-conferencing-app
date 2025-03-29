@@ -4,7 +4,7 @@ import { WorkerService } from './worker.service';
 
 @Injectable()
 export class SocketService {
-  constructor(private workerService: WorkerService) {}
+  constructor() {}
 
   private readonly connectedClients: Map<string, Socket> = new Map();
 
