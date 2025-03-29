@@ -12,7 +12,7 @@ export class RoomController {
     return await this.roomService.getRoom(roomUUID);
   }
 
-  @Post('/create')
+  @Post('/')
   async createRoom(@Body() createParticipantDto: CreateParticipantDto) {
     return await this.roomService.createRoom(createParticipantDto);
   }

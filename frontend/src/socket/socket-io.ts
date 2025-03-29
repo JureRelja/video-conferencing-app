@@ -3,6 +3,8 @@ import { io } from 'socket.io-client';
 
 const socket = io(`${process.env.BACKEND_URL}`, {});
 
+socket.connect();
+
 socket.on('connect', () => {
   console.log('Connected to backend');
 });
