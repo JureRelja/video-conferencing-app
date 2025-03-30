@@ -48,61 +48,61 @@ export default function Home() {
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       {/* Chat */}
       <div className="flex flex-wrap gap-4 justify-around w-full">
-        <Video isModerator name="Jure" total={total} isThisUser />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
-        <Video name="Ante" total={total} />
-        <Video name="Šime" total={total} />
-        <Video name="Stipe" total={total} />
+        <Video isModerator name="Jure" total={total} isThisUser socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
+        <Video name="Ante" total={total} socket={socket} />
+        <Video name="Šime" total={total} socket={socket} />
+        <Video name="Stipe" total={total} socket={socket} />
       </div>
       {/* 
       <div>

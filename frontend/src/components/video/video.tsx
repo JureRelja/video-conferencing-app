@@ -2,26 +2,32 @@
 
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
+import * as mediasoup from 'mediasoup-client';
+import { RtpCapabilities } from 'mediasoup-client/types';
+import { Socket } from 'socket.io-client';
 
 export default function Video({
   isModerator,
   isThisUser,
   name,
   total,
+  socket,
 }: {
   isThisUser?: boolean;
   isModerator?: boolean;
   name: string;
   total: number;
+  socket: Socket;
 }) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
 
-  const handleStream = (stream: MediaStream) => {
+  const handleStream = async (stream: MediaStream) => {
     if (element) {
       element.srcObject = stream;
     }
     setStream(stream);
+    await createDevice();
   };
 
   const getLocalStream = () => {
@@ -38,13 +44,23 @@ export default function Video({
       });
   };
 
+  const createDevice = async () => {
+    try {
+      const device = new mediasoup.Device();
+      const response = await fetch(`${process.env.BACKEND_URL}/rooms/router/${socket.id}`);
+      const routerRtpCapabilities = (await response.json()) as RtpCapabilities;
+      console.log(routerRtpCapabilities);
+      await device.load({ routerRtpCapabilities });
+    } catch (error) {
+      console.error('Error while creating device', error);
+    }
+  };
+
   useEffect(() => {
     if (isThisUser) {
       void getLocalStream();
     } else {
       // Handle remote stream
-      // Assuming you have a function to handle remote streams
-      // handleRemoteStream();s
     }
   }, [isThisUser, element]);
 

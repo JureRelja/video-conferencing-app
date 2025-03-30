@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './db/prisma.service';
 import { CreateParticipantDto } from './dto/create-participant.dto';
+import { SocketService } from './socket/socket.service';
 
 @Injectable()
 export class RoomService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly socketService: SocketService,
+  ) {}
 
   async getRoom(roomUUID: string) {
     const room = await this.prismaService.room.findUnique({
@@ -16,6 +20,10 @@ export class RoomService {
       },
     });
     return room;
+  }
+
+  getRoomRouter(socketId: string) {
+    return this.socketService.getRouter(socketId);
   }
 
   async createRoom(createParticipantDto: CreateParticipantDto) {

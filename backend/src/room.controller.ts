@@ -12,6 +12,11 @@ export class RoomController {
     return await this.roomService.getRoom(roomUUID);
   }
 
+  @Get('/router/:socketid')
+  getRoomRouter(@Param('socketid') socketId: string) {
+    return this.roomService.getRoomRouter(socketId);
+  }
+
   @Post('/')
   async createRoom(@Body() createParticipantDto: CreateParticipantDto) {
     return await this.roomService.createRoom(createParticipantDto);
