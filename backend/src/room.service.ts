@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from './db/prisma.service';
 import { CreateParticipantDto } from './dto/create-participant.dto';
 import { SocketService } from './socket/socket.service';
+import { AppData, Router } from 'mediasoup/types';
 
 @Injectable()
 export class RoomService {
@@ -22,8 +23,66 @@ export class RoomService {
     return room;
   }
 
-  getRoomRouter(socketId: string) {
-    return this.socketService.getRouter(socketId);
+  async createStream(roomUUID: string, socketId: string) {
+    const router = this.socketService.getRouter(roomUUID);
+
+    if (!router) {
+      return null;
+    }
+    const transports = await this.createWebRTCTransports(router, socketId);
+
+    return {
+      rtpCapabilities: router.rtpCapabilities,
+      producerTransport: {
+        id: transports.producerTransport.id,
+        iceParameters: transports.producerTransport.iceParameters,
+        iceCandidates: transports.producerTransport.iceCandidates,
+        dtlsParameters: transports.producerTransport.dtlsParameters,
+      },
+      consumerTransport: {
+        id: transports.consumerTransport.id,
+        iceParameters: transports.consumerTransport.iceParameters,
+        iceCandidates: transports.consumerTransport.iceCandidates,
+        dtlsParameters: transports.consumerTransport.dtlsParameters,
+      },
+    };
+  }
+
+  async createWebRTCTransports(router: Router<AppData>, socketId: string) {
+    const webRTCTrasportOptions = {
+      listenIps: [
+        {
+          ip: '127.0.0.1',
+        },
+      ],
+      enableUdp: true,
+      enableTcp: true,
+      preferUdp: true,
+    };
+
+    const consumerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
+    consumerTransport.on('dtlsstatechange', (dtlsState) => {
+      if (dtlsState === 'closed') {
+        consumerTransport.close();
+      }
+    });
+    consumerTransport.on('@close', () => {
+      console.log('Transport closed');
+    });
+
+    const producerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
+    producerTransport.on('dtlsstatechange', (dtlsState) => {
+      if (dtlsState === 'closed') {
+        producerTransport.close();
+      }
+    });
+    producerTransport.on('@close', () => {
+      console.log('Transport closed');
+    });
+
+    this.socketService.addTransports(router, socketId, producerTransport, consumerTransport);
+
+    return { producerTransport, consumerTransport };
   }
 
   async createRoom(createParticipantDto: CreateParticipantDto) {
@@ -40,6 +99,9 @@ export class RoomService {
         participants: true,
       },
     });
+
+    await this.socketService.createRouter(newRoom.uuid, newRoom.participants[0].socketId);
+
     return newRoom;
   }
 
