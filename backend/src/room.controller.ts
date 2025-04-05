@@ -12,9 +12,9 @@ export class RoomController {
     return await this.roomService.getRoom(roomUUID);
   }
 
-  @Get('/router/:socketid')
-  getRoomRouter(@Param('socketid') socketId: string) {
-    return this.roomService.getRoomRouter(socketId);
+  @Post('/router/:roomId')
+  createStream(@Param('roomId') roomId: string, @Body() body: { socketId: string }) {
+    return this.roomService.createStream(roomId, body.socketId);
   }
 
   @Post('/')
