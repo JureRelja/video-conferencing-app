@@ -137,6 +137,7 @@ export default function Home() {
                 total={total}
                 isThisUser={user.isThisUser}
                 deviceData={deviceData}
+                roomId={id}
               />
             );
           })}

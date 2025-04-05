@@ -6,29 +6,6 @@ import * as mediasoup from 'mediasoup-client';
 import { AppData, RtpCapabilities, TransportOptions } from 'mediasoup-client/types';
 import socket from '@/socket/socket-io';
 
-const params = {
-  encoding: [
-    {
-      rid: 'r0',
-      maxBitrate: 100000,
-      scalabilityMode: 'S1T3',
-    },
-    {
-      rid: 'r1',
-      maxBitrate: 300000,
-      scalabilityMode: 'S1T3',
-    },
-    {
-      rid: 'r2',
-      maxBitrate: 900000,
-      scalabilityMode: 'S1T3',
-    },
-  ],
-  codecOptions: {
-    videoGoogleStartBitrate: 1000,
-  },
-};
-
 export default function Video({
   deviceData,
   roomId,
@@ -50,6 +27,12 @@ export default function Video({
   const handleStream = async (stream: MediaStream) => {
     if (element) {
       element.srcObject = stream;
+      const tracks = stream.getVideoTracks();
+
+      if (tracks.length === 0) {
+        console.error('No video track found');
+        return;
+      }
     }
     setStream(stream);
     await createDevice();
@@ -65,7 +48,8 @@ export default function Video({
         handleStream(stream);
       })
       .catch((error) => {
-        console.error('Error while accesing camera and microphone.', error);
+        console.error('Error while accessing camera and microphone.', error);
+        alert('Please allow camera and microphone access to join the room.');
       });
   };
 
@@ -92,21 +76,29 @@ export default function Video({
 
       producerTransport.on('produce', ({ kind, rtpParameters }, callback) => {
         try {
-          socket.emit('produce-transport', { roomId, kind, rtpParameters }, (id: string | undefined) => {
-            if (!id) {
+          socket.emit('produce-transport', { roomId, kind, rtpParameters }, (data: { id: string | undefined }) => {
+            if (!data.id) {
               console.error('Error while producing stream');
             } else {
-              callback({ id });
+              callback({ id: data.id });
             }
           });
         } catch (error) {
           console.error('Error while producing stream', error);
         }
       });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const videoTrack = stream.getVideoTracks()[0];
 
-      await producerTransport.produce(params);
+      const producer = await producerTransport.produce({
+        track: videoTrack,
+        encodings: [{ maxBitrate: 100000 }, { maxBitrate: 300000 }, { maxBitrate: 900000 }],
+        codecOptions: {
+          videoGoogleStartBitrate: 1000,
+        },
+      });
     } catch (error) {
-      console.error('Error while creating device', error);
+      console.error('Error while creating device already connected');
     }
   };
 

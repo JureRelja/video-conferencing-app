@@ -14,10 +14,6 @@ export default function Home() {
 
     console.log('Room:', room);
 
-    const response = await fetch(`${process.env.BACKEND_URL}/rooms/router/${room?.uuid}`);
-    const routerRtpCapabilities = (await response.json()) as RtpCapabilities;
-    console.log(routerRtpCapabilities);
-
     if (room) {
       socket.emit('join-room', room.uuid, socket.id);
       void router.push(`/rooms/${room.uuid}`);
@@ -31,10 +27,6 @@ export default function Home() {
     const room = await startCall(socket.id as string, formData);
 
     console.log('Room:', room);
-
-    const response = await fetch(`${process.env.BACKEND_URL}/rooms/router/${room?.uuid}`);
-    const routerRtpCapabilities = (await response.json()) as RtpCapabilities;
-    console.log(routerRtpCapabilities);
 
     if (room) {
       socket.emit('join-room', room.uuid, socket.id);

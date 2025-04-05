@@ -61,9 +61,14 @@ export class SocketService {
       return;
     }
 
-    const producer = await transport.produce({ kind, rtpParameters });
-
-    return producer.id;
+    try {
+      const producer = await transport.produce({ kind, rtpParameters });
+      console.log('Producer created:', producer.id);
+      return producer.id;
+    } catch (error) {
+      console.error('Error while producing stream:', error);
+      return null;
+    }
   }
 
   async connectTransport(socket: Socket, dtlsParameters: DtlsParameters, roomId: string) {
@@ -95,8 +100,12 @@ export class SocketService {
       return;
     }
 
-    await transport.connect({ dtlsParameters });
-    console.log('Transport connected:', transport.id);
+    try {
+      await transport.connect({ dtlsParameters });
+      console.log('Transport connected:', transport.id);
+    } catch (error) {
+      console.error('Error while connecting transport:', error);
+    }
   }
 
   async createRouter(roomId: string, socketId: string) {
