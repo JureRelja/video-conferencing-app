@@ -1,15 +1,93 @@
 'use client';
 
-import socket from '@/socket/socket-io';
 import { Button } from '@/components/ui/button';
 import Video from '@/components/video/video';
 import { Input } from '@/components/ui/input';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { AppData, RtpCapabilities, TransportOptions } from 'mediasoup-client/types';
+import socket from '@/socket/socket-io';
+
+const temp = [
+  {
+    isModerator: true,
+    isThisUser: true,
+    name: 'Jure',
+    total: 20,
+    rtpCapabilities: null,
+  },
+
+  {
+    isModerator: false,
+    isThisUser: false,
+    name: 'Ante',
+    total: 20,
+    rtpCapabilities: null,
+  },
+
+  {
+    isModerator: false,
+    isThisUser: false,
+    name: 'Šime',
+    total: 20,
+    rtpCapabilities: null,
+  },
+  {
+    isModerator: false,
+    isThisUser: false,
+    name: 'Stipe',
+    total: 20,
+    rtpCapabilities: null,
+  },
+  {
+    isModerator: false,
+    isThisUser: false,
+    name: 'Zvone',
+    total: 20,
+    rtpCapabilities: null,
+  },
+  {
+    isModerator: false,
+    isThisUser: false,
+    name: 'Ive',
+    total: 20,
+    rtpCapabilities: null,
+  },
+];
 
 export default function Home() {
   const { id } = useParams<{ id: string }>();
   const [total, setTotal] = useState<number>(20);
+  const [deviceData, setDeviceData] = useState<{
+    rtpCapabilities: RtpCapabilities;
+    producerTransport: TransportOptions<AppData>;
+    consumerTransport: TransportOptions<AppData>;
+  } | null>(null);
+
+  const getStream = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/router/${id}`, {
+      body: JSON.stringify({
+        socketId: socket.id,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = (await response.json()) as {
+      rtpCapabilities: RtpCapabilities;
+      producerTransport: TransportOptions<AppData>;
+      consumerTransport: TransportOptions<AppData>;
+    };
+
+    console.log(data);
+
+    setDeviceData(data);
+  };
+
+  useEffect(() => {
+    getStream();
+  }, []);
 
   // Chat
   // const [message, setMessage] = useState<string>('');
@@ -47,63 +125,27 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       {/* Chat */}
-      <div className="flex flex-wrap gap-4 justify-around w-full">
-        <Video isModerator name="Jure" total={total} isThisUser socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-        <Video name="Ante" total={total} socket={socket} />
-        <Video name="Šime" total={total} socket={socket} />
-        <Video name="Stipe" total={total} socket={socket} />
-      </div>
+
+      {deviceData && (
+        <div className="flex flex-wrap gap-4 justify-around w-full">
+          {temp.map((user) => {
+            return (
+              <Video
+                key={user.name}
+                isModerator={user.isModerator}
+                name={user.name}
+                total={total}
+                isThisUser={user.isThisUser}
+                deviceData={deviceData}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* <div className="flex flex-col gap-2 justify-center items-center w-full">
+        <h2 className="text-2xl text-center">Chat</h2>
+        <p className="text-gray-500 text-sm">Chat je trenutno u razvoju...</p>
       {/* 
       <div>
       {!chatHidden ? (
