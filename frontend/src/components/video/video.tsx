@@ -3,21 +3,46 @@
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState } from 'react';
 import * as mediasoup from 'mediasoup-client';
-import { RtpCapabilities } from 'mediasoup-client/types';
-import { Socket } from 'socket.io-client';
+import { AppData, RtpCapabilities, TransportOptions } from 'mediasoup-client/types';
+import socket from '@/socket/socket-io';
+
+const params = {
+  encoding: [
+    {
+      rid: 'r0',
+      maxBitrate: 100000,
+      scalabilityMode: 'S1T3',
+    },
+    {
+      rid: 'r1',
+      maxBitrate: 300000,
+      scalabilityMode: 'S1T3',
+    },
+    {
+      rid: 'r2',
+      maxBitrate: 900000,
+      scalabilityMode: 'S1T3',
+    },
+  ],
+  codecOptions: {
+    videoGoogleStartBitrate: 1000,
+  },
+};
 
 export default function Video({
+  deviceData,
+  roomId,
   isModerator,
   isThisUser,
   name,
   total,
-  socket,
 }: {
+  deviceData: { rtpCapabilities: RtpCapabilities; producerTransport: TransportOptions<AppData>; consumerTransport: TransportOptions<AppData> };
   isThisUser?: boolean;
   isModerator?: boolean;
+  roomId: string;
   name: string;
   total: number;
-  socket: Socket;
 }) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
@@ -47,10 +72,39 @@ export default function Video({
   const createDevice = async () => {
     try {
       const device = new mediasoup.Device();
-      const response = await fetch(`${process.env.BACKEND_URL}/rooms/router/${socket.id}`);
-      const routerRtpCapabilities = (await response.json()) as RtpCapabilities;
-      console.log(routerRtpCapabilities);
-      await device.load({ routerRtpCapabilities });
+      await device.load({ routerRtpCapabilities: deviceData.rtpCapabilities });
+
+      const producerTransport = device.createSendTransport({
+        id: deviceData.producerTransport.id,
+        iceParameters: deviceData.producerTransport.iceParameters,
+        iceCandidates: deviceData.producerTransport.iceCandidates,
+        dtlsParameters: deviceData.producerTransport.dtlsParameters,
+      });
+
+      producerTransport.on('connect', ({ dtlsParameters }, callback) => {
+        try {
+          socket.emit('connect-transport', { roomId, dtlsParameters });
+          callback();
+        } catch (error) {
+          console.error('Error while connecting producer transport', error);
+        }
+      });
+
+      producerTransport.on('produce', ({ kind, rtpParameters }, callback) => {
+        try {
+          socket.emit('produce-transport', { roomId, kind, rtpParameters }, (id: string | undefined) => {
+            if (!id) {
+              console.error('Error while producing stream');
+            } else {
+              callback({ id });
+            }
+          });
+        } catch (error) {
+          console.error('Error while producing stream', error);
+        }
+      });
+
+      await producerTransport.produce(params);
     } catch (error) {
       console.error('Error while creating device', error);
     }
