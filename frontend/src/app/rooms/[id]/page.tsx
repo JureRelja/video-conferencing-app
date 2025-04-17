@@ -8,50 +8,18 @@ import { useEffect, useState } from 'react';
 import { AppData, RtpCapabilities, TransportOptions } from 'mediasoup-client/types';
 import socket from '@/socket/socket-io';
 
-const temp = [
-  {
-    isModerator: true,
-    isThisUser: true,
-    name: 'Jure',
-    total: 20,
-  },
-
-  {
-    isModerator: false,
-    isThisUser: false,
-    name: 'Ante',
-    total: 20,
-  },
-
-  {
-    isModerator: false,
-    isThisUser: false,
-    name: 'Šime',
-    total: 20,
-  },
-  {
-    isModerator: false,
-    isThisUser: false,
-    name: 'Stipe',
-    total: 20,
-  },
-  {
-    isModerator: false,
-    isThisUser: false,
-    name: 'Zvone',
-    total: 20,
-  },
-  {
-    isModerator: false,
-    isThisUser: false,
-    name: 'Ive',
-    total: 20,
-  },
-];
+type Participant = {
+  id: number;
+  socketId: string;
+  name: string;
+  role: 'USER' | 'MODERATOR';
+  roomId: number;
+};
 
 export default function Home() {
   const { id } = useParams<{ id: string }>();
   const [total, setTotal] = useState<number>(20);
+  const [participants, setParticipants] = useState<Participant[]>();
   const [deviceData, setDeviceData] = useState<{
     rtpCapabilities: RtpCapabilities;
     producerTransport: TransportOptions<AppData>;
@@ -59,24 +27,30 @@ export default function Home() {
   } | null>(null);
 
   const getStream = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/router/${id}`, {
-      body: JSON.stringify({
-        socketId: socket.id,
+    const [mediaSoupRes, roomParticipantsRes] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/router/${id}`, {
+        body: JSON.stringify({
+          socketId: socket.id,
+        }),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = (await response.json()) as {
-      rtpCapabilities: RtpCapabilities;
-      producerTransport: TransportOptions<AppData>;
-      consumerTransport: TransportOptions<AppData>;
-    };
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }),
+    ]);
 
-    console.log(data);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const [mediaSoupData, roomParticipantsData] = await Promise.all([mediaSoupRes.json(), roomParticipantsRes.json()]);
 
-    setDeviceData(data);
+    console.log(roomParticipantsData);
+
+    setDeviceData(mediaSoupData);
+    setParticipants(roomParticipantsData);
   };
 
   useEffect(() => {
@@ -122,19 +96,19 @@ export default function Home() {
 
       {deviceData && (
         <div className="flex flex-wrap gap-4 justify-around w-full">
-          {temp.map((user) => {
-            return (
-              <Video
-                key={user.name}
-                isModerator={user.isModerator}
-                name={user.name}
-                total={total}
-                isThisUser={user.isThisUser}
-                deviceData={deviceData}
-                roomId={id}
-              />
-            );
-          })}
+          {participants &&
+            participants.map((participant) => {
+              return (
+                <Video
+                  key={participant.id}
+                  isModerator={participant.role === 'MODERATOR'}
+                  name={participant.name}
+                  total={total}
+                  deviceData={deviceData}
+                  roomId={id}
+                />
+              );
+            })}
         </div>
       )}
 
