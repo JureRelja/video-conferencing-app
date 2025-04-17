@@ -26,7 +26,7 @@ export default function Home() {
     consumerTransport: TransportOptions<AppData>;
   } | null>(null);
 
-  const getStream = async () => {
+  const getRtp = async () => {
     const [mediaSoupRes, roomParticipantsRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/router/${id}`, {
         body: JSON.stringify({
@@ -54,13 +54,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    getStream();
+    getRtp();
   }, []);
 
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-      {/* Chat */}
-
       {deviceData && (
         <div className="flex flex-wrap gap-4 justify-around w-full">
           {participants &&
@@ -69,6 +67,7 @@ export default function Home() {
                 <Video
                   key={participant.id}
                   isModerator={participant.role === 'MODERATOR'}
+                  isThisUser={socket.id === participant.socketId}
                   name={participant.name}
                   total={total}
                   deviceData={deviceData}

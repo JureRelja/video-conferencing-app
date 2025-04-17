@@ -28,7 +28,7 @@ export default function Video({
   const [producerTransport, setProducerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
   const [producer, setProducer] = useState<mediasoup.types.Producer<mediasoup.types.AppData> | null>(null);
 
-  const handleStream = async (stream: MediaStream) => {
+  const handleStream = (stream: MediaStream) => {
     if (element) {
       element.srcObject = stream;
       const tracks = stream.getVideoTracks();
@@ -39,22 +39,19 @@ export default function Video({
       }
     }
     setStream(stream);
-    await createDevice();
   };
 
-  const getLocalStream = () => {
-    navigator.mediaDevices
-      .getUserMedia({
+  const getLocalStream = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
-      })
-      .then((stream) => {
-        handleStream(stream);
-      })
-      .catch((error) => {
-        console.error('Error while accessing camera and microphone.', error);
-        alert('Please allow camera and microphone access to join the room.');
       });
+
+      handleStream(stream);
+    } catch (error) {
+      alert('Please allow camera and microphone access to join the room.');
+    }
   };
 
   const createDevice = async () => {
