@@ -61,6 +61,7 @@ export class RoomService {
     };
 
     const consumerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
+
     consumerTransport.on('dtlsstatechange', (dtlsState) => {
       if (dtlsState === 'closed') {
         consumerTransport.close();
@@ -69,6 +70,8 @@ export class RoomService {
     consumerTransport.on('@close', () => {
       console.log('Transport closed');
     });
+
+    //
 
     const producerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
     producerTransport.on('dtlsstatechange', (dtlsState) => {
@@ -79,6 +82,8 @@ export class RoomService {
     producerTransport.on('@close', () => {
       console.log('Transport closed');
     });
+
+    //
 
     this.socketService.addTransports(router, socketId, producerTransport, consumerTransport);
 
