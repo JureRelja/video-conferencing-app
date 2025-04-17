@@ -10,8 +10,6 @@ datasource db {
 model Room {
   id           Int           @id @default(autoincrement())
   uuid         String        @unique @default(uuid())
-  sdp          String?
-  sdpType      String?
   participants Participant[]
   messages     Message[]
 }
