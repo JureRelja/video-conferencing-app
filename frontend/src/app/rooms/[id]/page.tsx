@@ -14,7 +14,6 @@ const temp = [
     isThisUser: true,
     name: 'Jure',
     total: 20,
-    rtpCapabilities: null,
   },
 
   {
@@ -22,7 +21,6 @@ const temp = [
     isThisUser: false,
     name: 'Ante',
     total: 20,
-    rtpCapabilities: null,
   },
 
   {
@@ -30,28 +28,24 @@ const temp = [
     isThisUser: false,
     name: 'Šime',
     total: 20,
-    rtpCapabilities: null,
   },
   {
     isModerator: false,
     isThisUser: false,
     name: 'Stipe',
     total: 20,
-    rtpCapabilities: null,
   },
   {
     isModerator: false,
     isThisUser: false,
     name: 'Zvone',
     total: 20,
-    rtpCapabilities: null,
   },
   {
     isModerator: false,
     isThisUser: false,
     name: 'Ive',
     total: 20,
-    rtpCapabilities: null,
   },
 ];
 
