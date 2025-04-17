@@ -11,16 +11,15 @@ export class RoomService {
     private readonly socketService: SocketService,
   ) {}
 
-  async getRoom(roomUUID: string) {
-    const room = await this.prismaService.room.findUnique({
+  async getRoomParticipants(roomUUID: string) {
+    const participants = await this.prismaService.participant.findMany({
       where: {
-        uuid: roomUUID,
-      },
-      include: {
-        participants: true,
+        room: {
+          uuid: roomUUID,
+        },
       },
     });
-    return room;
+    return participants;
   }
 
   async createStream(roomUUID: string, socketId: string) {

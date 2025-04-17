@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { RoomService } from './room.service';
-import { Room } from '@prisma/client';
+import { Room, Participant } from '@prisma/client';
 import { CreateParticipantDto } from './dto/create-participant.dto';
 
 @Controller('/rooms')
@@ -8,8 +8,8 @@ export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
   @Get('/:roomId')
-  async getRoom(@Param('roomId') roomUUID: string): Promise<Room | null> {
-    return await this.roomService.getRoom(roomUUID);
+  async getRoomParticipants(@Param('roomId') roomUUID: string): Promise<Participant[]> {
+    return await this.roomService.getRoomParticipants(roomUUID);
   }
 
   @Post('/router/:roomId')
