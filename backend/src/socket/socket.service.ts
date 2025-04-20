@@ -14,7 +14,7 @@ export class SocketService {
     {
       producerTransport: null | WebRtcTransport<AppData>;
       producer: null | Producer<AppData>;
-      consumer: null | Consumer<AppData>;
+      consumers: Consumer<AppData>[];
       consumerTransport: null | WebRtcTransport<AppData>;
       socketId: string;
     }[]
@@ -32,7 +32,7 @@ export class SocketService {
         | {
             producerTransport: null | WebRtcTransport<AppData>;
             producer: null | Producer<AppData>;
-            consumer: null | Consumer<AppData>;
+            consumers: Consumer<AppData>[];
             consumerTransport: null | WebRtcTransport<AppData>;
             socketId: string;
           }[]
@@ -80,20 +80,26 @@ export class SocketService {
       await this.connectTransport(socket, dtlsParameters, roomId, 'consumer');
     });
 
-    socket.on('consume-transport', async ({ roomId, rtpCapabilities }) => {
-      const data = await this.consumeTransport(socket, roomId, rtpCapabilities);
+    socket.on('consume-transport', async ({ roomId, rtpCapabilities, producerSocketId }) => {
+      const data = await this.consumeTransport(socket, roomId, rtpCapabilities, producerSocketId);
 
       return data;
     });
 
-    socket.on('consumer-resume', async ({ roomId }) => {
-      const data = await this.resumeConsumer(socket, roomId);
+    socket.on('consumer-resume', async ({ roomId, consumerId }) => {
+      const data = await this.resumeConsumer(socket, roomId, consumerId);
 
       return data;
+    });
+
+    socket.on('join-room', async ({ roomId }) => {
+      await socket.join(roomId);
+
+      socket.to(roomId).emit('new-participant-joinned');
     });
   }
 
-  async resumeConsumer(socket: Socket, roomId: string) {
+  async resumeConsumer(socket: Socket, roomId: string, consumerId: string) {
     const router = this.activeRooms.get(roomId);
 
     if (!router) {
@@ -115,7 +121,7 @@ export class SocketService {
       return;
     }
 
-    const consumer = client.consumer;
+    const consumer = client.consumers.find((consumer) => consumer.id === consumerId);
 
     if (!consumer) {
       console.error('Consumer not found for the client');
@@ -125,7 +131,7 @@ export class SocketService {
     await consumer.resume();
   }
 
-  async consumeTransport(socket: Socket, roomId: string, rtpCapabilities: RtpCapabilities) {
+  async consumeTransport(socket: Socket, roomId: string, rtpCapabilities: RtpCapabilities, producerSocketId: string) {
     const router = this.activeRooms.get(roomId);
 
     if (!router) {
@@ -140,7 +146,7 @@ export class SocketService {
       return;
     }
 
-    const producerId = existingClients[0].producerTransport?.id;
+    const producerId = existingClients.find((client) => client.socketId === producerSocketId)?.producer?.id;
 
     if (!producerId) {
       console.log('No producer is connected');
@@ -186,7 +192,7 @@ export class SocketService {
         rtpParameters: consumer.rtpParameters,
       };
 
-      client.consumer = consumer;
+      client.consumers.push(consumer);
 
       return data;
     } catch (error) {
@@ -319,9 +325,9 @@ export class SocketService {
     const existingClients = this.connectedClients.get(router);
 
     if (existingClients) {
-      existingClients.push({ producerTransport: null, consumer: null, producer: null, consumerTransport: null, socketId });
+      existingClients.push({ producerTransport: null, consumers: [], producer: null, consumerTransport: null, socketId });
     } else {
-      this.connectedClients.set(router, [{ producerTransport: null, consumer: null, producer: null, consumerTransport: null, socketId }]);
+      this.connectedClients.set(router, [{ producerTransport: null, consumers: [], producer: null, consumerTransport: null, socketId }]);
     }
   }
 
