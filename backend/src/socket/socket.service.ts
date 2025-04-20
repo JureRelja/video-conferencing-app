@@ -44,6 +44,11 @@ export class SocketService {
         if (existingClients) {
           clientIndex = existingClients.findIndex((client) => client.socketId === clientId);
           roomUUID = roomID;
+
+          // deleting empty rooms
+          if (existingClients?.length === 1) {
+            this.activeRooms.delete(roomUUID);
+          }
         }
       });
 
