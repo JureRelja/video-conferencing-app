@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { WorkerService } from './worker.service';
 import { AppData, Consumer, DtlsParameters, MediaKind, Producer, Router, RtpCapabilities, RtpParameters, WebRtcTransport } from 'mediasoup/types';
+import { RoomService } from 'src/room.service';
 
 @Injectable()
 export class SocketService {
-  constructor() {}
+  constructor(private readonly roomService: RoomService) {}
 
   private readonly activeRooms: Map<string, Router<AppData>> = new Map();
   private readonly connectedClients: Map<
@@ -23,8 +24,37 @@ export class SocketService {
     const clientId = socket.id;
     console.log('Client connected', clientId);
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('Client disconected', clientId);
+
+      let clientIndex: null | number = null;
+      let existingClients:
+        | {
+            producerTransport: null | WebRtcTransport<AppData>;
+            producer: null | Producer<AppData>;
+            consumer: null | Consumer<AppData>;
+            consumerTransport: null | WebRtcTransport<AppData>;
+            socketId: string;
+          }[]
+        | undefined;
+      let roomUUID: string | undefined;
+
+      this.activeRooms.forEach((router, roomID) => {
+        existingClients = this.connectedClients.get(router);
+        if (existingClients) {
+          clientIndex = existingClients.findIndex((client) => client.socketId === clientId);
+          roomUUID = roomID;
+        }
+      });
+
+      if (clientIndex === null || !existingClients || !roomUUID) {
+        console.error('Client not found in any room');
+        return;
+      }
+
+      existingClients.splice(clientIndex, 1);
+      await this.roomService.deleteParticipant(clientId, roomUUID);
+      console.log('Client removed from the room:', roomUUID);
     });
 
     // Handle other events and messages from the client

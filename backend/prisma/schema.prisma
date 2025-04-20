@@ -16,14 +16,14 @@ model Room {
 
 model Participant {
   id       Int       @id @default(autoincrement())
-  socketId String
+  socketId String   
   name     String
   role     Role      @default(USER)
-  room     Room      @relation(fields: [roomId], references: [id])
-  roomId   Int
+  room     Room      @relation(fields: [roomUUID], references: [uuid])
+  roomUUID String
   messages Message[]
 
-  @@unique([socketId, roomId])
+  @@unique([socketId, roomUUID])
 }
 
 enum Role {

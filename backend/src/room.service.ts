@@ -22,6 +22,18 @@ export class RoomService {
     return participants;
   }
 
+  async deleteParticipant(socketId: string, roomUUID: string) {
+    const participant = await this.prismaService.participant.delete({
+      where: {
+        socketId_roomUUID: {
+          socketId: socketId,
+          roomUUID: roomUUID,
+        },
+      },
+    });
+    return participant;
+  }
+
   async createStream(roomUUID: string, socketId: string) {
     const router = this.socketService.getRouter(roomUUID);
 
