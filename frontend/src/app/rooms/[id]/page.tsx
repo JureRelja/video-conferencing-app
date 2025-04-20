@@ -51,6 +51,7 @@ export default function Home() {
 
     setDeviceData(mediaSoupData);
     setParticipants(roomParticipantsData);
+    setTotal(roomParticipantsData?.length ?? 0);
   };
 
   useEffect(() => {
@@ -80,10 +81,10 @@ export default function Home() {
 
       {/* Invite */}
       <div className="flex items-center gap-2 justify-center w-fit">
-        <Input value={`https://projektr-fer-frontend.onrender.com/?roomId=${id}`} readOnly className="border-gray-400 border-2 bg-white p-2 " />
+        <Input value={`${process.env.FRONTEND_URL}/?roomId=${id}`} readOnly className="border-gray-400 border-2 bg-white p-2 " />
         <Button
           onClick={() => {
-            void navigator.clipboard.writeText(`https://projektr-fer-frontend.onrender.com/?roomId=${id}`);
+            void navigator.clipboard.writeText(`${process.env.FRONTEND_URL}/?roomId=${id}`);
           }}>
           Kopiraj link
         </Button>

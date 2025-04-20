@@ -23,6 +23,7 @@ export default function Video({
 }) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
+  const [device, setDevice] = useState<mediasoup.types.Device | null>(null);
   const [consumerTransports, setConsumerTransports] = useState<mediasoup.types.Transport<mediasoup.types.AppData>[]>([]);
   const [consumer, setConsumer] = useState<mediasoup.types.Consumer<mediasoup.types.AppData> | null>(null);
   const [producerTransport, setProducerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
@@ -49,17 +50,32 @@ export default function Video({
       });
 
       handleStream(stream);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       alert('Please allow camera and microphone access to join the room.');
     }
   };
 
   const createDevice = async () => {
-    try {
-      const device = new mediasoup.Device();
-      await device.load({ routerRtpCapabilities: deviceData.rtpCapabilities });
+    const device = new mediasoup.Device();
+    await device.load({ routerRtpCapabilities: deviceData.rtpCapabilities });
 
-      const producerTransport = device.createSendTransport({
+    setDevice(device);
+  };
+
+  useEffect(() => {
+    if (device) {
+      if (isThisUser) {
+        void createProducer();
+      } else {
+        createConsumer();
+      }
+    }
+  }, [device]);
+
+  const createProducer = async () => {
+    try {
+      const producerTransport = device!.createSendTransport({
         id: deviceData.producerTransport.id,
         iceParameters: deviceData.producerTransport.iceParameters,
         iceCandidates: deviceData.producerTransport.iceCandidates,
@@ -103,8 +119,15 @@ export default function Video({
       });
 
       setProducer(producer);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      console.log('Error consuming transport');
+    }
+  };
 
-      const consumerTransport = device.createRecvTransport({
+  const createConsumer = () => {
+    try {
+      const consumerTransport = device!.createRecvTransport({
         id: deviceData.producerTransport.id,
         iceParameters: deviceData.producerTransport.iceParameters,
         iceCandidates: deviceData.producerTransport.iceCandidates,
@@ -124,7 +147,7 @@ export default function Video({
 
       socket.emit(
         'consume-transport',
-        { rtpCapabilities: device.rtpCapabilities },
+        { rtpCapabilities: device!.rtpCapabilities },
         async (data: {
           producerId: string | undefined;
           id: string | undefined;
@@ -143,20 +166,23 @@ export default function Video({
 
             setConsumer(consumer);
 
-            const track = consumer.track;
+            const stream = new MediaStream();
+            stream.addTrack(consumer.track);
 
-            // socket.emit('consumer-resume', { roomId });
+            handleStream(stream);
+
+            socket.emit('consumer-resume', { roomId });
           }
         },
       );
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      console.log('Error consuming transport');
+    } catch (err) {
+      console.log(err);
     }
   };
 
   useEffect(() => {
+    void createDevice();
+
     if (isThisUser) {
       void getLocalStream();
     } else {
