@@ -54,8 +54,34 @@ export default function Home() {
     setTotal(roomParticipantsData?.length ?? 0);
   };
 
+  const fetchParticipants = async () => {
+    const roomParticipantsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const roomParticipantsData = await roomParticipantsRes.json();
+
+    setParticipants(roomParticipantsData);
+    setTotal(roomParticipantsData?.length ?? 0);
+  };
+
   useEffect(() => {
-    getRtp();
+    getRtp()
+      .then((res) => {
+        void socket.emit('join-room', { roomId: id });
+
+        socket.on('new-participant-joinned', () => {
+          fetchParticipants();
+        });
+      })
+      .catch((err) => console.log(err));
+
+    return () => {
+      socket.off('new-participant-joinned');
+    };
   }, []);
 
   return (
@@ -69,6 +95,7 @@ export default function Home() {
                   key={participant.id}
                   isModerator={participant.role === 'MODERATOR'}
                   isThisUser={socket.id === participant.socketId}
+                  socketId={participant.socketId}
                   name={participant.name}
                   total={total}
                   deviceData={deviceData}

@@ -9,6 +9,7 @@ import socket from '@/socket/socket-io';
 export default function Video({
   deviceData,
   roomId,
+  socketId,
   isModerator,
   isThisUser,
   name,
@@ -17,6 +18,7 @@ export default function Video({
   deviceData: { rtpCapabilities: RtpCapabilities; producerTransport: TransportOptions<AppData>; consumerTransport: TransportOptions<AppData> };
   isThisUser?: boolean;
   isModerator?: boolean;
+  socketId: string;
   roomId: string;
   name: string;
   total: number;
@@ -147,7 +149,7 @@ export default function Video({
 
       socket.emit(
         'consume-transport',
-        { rtpCapabilities: device!.rtpCapabilities },
+        { roomId: roomId, rtpCapabilities: device!.rtpCapabilities, producerSocketId: socketId },
         async (data: {
           producerId: string | undefined;
           id: string | undefined;
@@ -171,7 +173,7 @@ export default function Video({
 
             handleStream(stream);
 
-            socket.emit('consumer-resume', { roomId });
+            socket.emit('consumer-resume', { roomId, consumerId: consumer.id });
           }
         },
       );
