@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { WorkerService } from './worker.service';
 import { AppData, Consumer, DtlsParameters, MediaKind, Producer, Router, RtpCapabilities, RtpParameters, WebRtcTransport } from 'mediasoup/types';
@@ -6,7 +6,10 @@ import { RoomService } from 'src/room.service';
 
 @Injectable()
 export class SocketService {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(
+    @Inject(forwardRef(() => RoomService))
+    private readonly roomService: RoomService,
+  ) {}
 
   private readonly activeRooms: Map<string, Router<AppData>> = new Map();
   private readonly connectedClients: Map<
@@ -58,8 +61,12 @@ export class SocketService {
       }
 
       existingClients.splice(clientIndex, 1);
-      await this.roomService.deleteParticipant(clientId, roomUUID);
-      console.log('Client removed from the room:', roomUUID);
+      try {
+        await this.roomService.deleteParticipant(clientId, roomUUID);
+        console.log('Client removed from the room:', roomUUID);
+      } catch (error) {
+        console.error('Error deleting participant:', error);
+      }
     });
 
     // Handle other events and messages from the client
@@ -92,8 +99,34 @@ export class SocketService {
       return data;
     });
 
-    socket.on('join-room', async ({ roomId }) => {
+    socket.on('join-room', async (roomId) => {
       await socket.join(roomId);
+
+      const router = this.activeRooms.get(roomId);
+      if (!router) {
+        console.error('Router not found for room:', roomId);
+        return;
+      }
+      const existingClients = this.connectedClients.get(router);
+      if (!existingClients) {
+        console.error('No clients connected to the router');
+        return;
+      }
+
+      existingClients.push({
+        producerTransport: null,
+        consumers: [],
+        producer: null,
+        consumerTransport: null,
+        socketId: socket.id,
+      });
+
+      const participant = await this.roomService.joinRoom(roomId, { socketId: socket.id, name: 'Jure ' + socket.id });
+      if (!participant) {
+        console.error('Error joining room');
+        return;
+      }
+      console.log('Participant joined room:', participant);
 
       socket.to(roomId).emit('new-participant-joinned');
     });
@@ -297,7 +330,7 @@ export class SocketService {
     }
   }
 
-  async createRouter(roomId: string, socketId: string) {
+  async createRouter(roomId: string) {
     if (!WorkerService.worker) {
       console.error('Worker is not initialized, initializing...');
       await WorkerService.createWorker();
@@ -322,13 +355,15 @@ export class SocketService {
     });
 
     this.activeRooms.set(roomId, router);
-    const existingClients = this.connectedClients.get(router);
+    this.connectedClients.set(router, []);
 
-    if (existingClients) {
-      existingClients.push({ producerTransport: null, consumers: [], producer: null, consumerTransport: null, socketId });
-    } else {
-      this.connectedClients.set(router, [{ producerTransport: null, consumers: [], producer: null, consumerTransport: null, socketId }]);
-    }
+    // const existingClients = this.connectedClients.get(router);
+
+    // if (existingClients) {
+    //   existingClients.push({ producerTransport: null, consumers: [], producer: null, consumerTransport: null, socketId });
+    // } else {
+    //   this.connectedClients.set(router, [{ producerTransport: null, consumers: [], producer: null, consumerTransport: null, socketId }]);
+    // }
   }
 
   addTransports(router: Router<AppData>, socketId: string, producerTransport: WebRtcTransport<AppData>, consumerTransport: WebRtcTransport<AppData>) {

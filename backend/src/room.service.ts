@@ -11,6 +11,15 @@ export class RoomService {
     private readonly socketService: SocketService,
   ) {}
 
+  async getRoom(roomUUID: string) {
+    const room = await this.prismaService.room.findUnique({
+      where: {
+        uuid: roomUUID,
+      },
+    });
+    return room;
+  }
+
   async getRoomParticipants(roomUUID: string) {
     const participants = await this.prismaService.participant.findMany({
       where: {
@@ -23,15 +32,19 @@ export class RoomService {
   }
 
   async deleteParticipant(socketId: string, roomUUID: string) {
-    const participant = await this.prismaService.participant.delete({
-      where: {
-        socketId_roomUUID: {
-          socketId: socketId,
-          roomUUID: roomUUID,
+    try {
+      const participant = await this.prismaService.participant.delete({
+        where: {
+          socketId_roomUUID: {
+            socketId: socketId,
+            roomUUID: roomUUID,
+          },
         },
-      },
-    });
-    return participant;
+      });
+      return participant;
+    } catch (error) {
+      console.error('Error deleting participant:', error);
+    }
   }
 
   async createStream(roomUUID: string, socketId: string) {
@@ -101,22 +114,10 @@ export class RoomService {
     return { producerTransport, consumerTransport };
   }
 
-  async createRoom(createParticipantDto: CreateParticipantDto) {
-    const newRoom = await this.prismaService.room.create({
-      data: {
-        participants: {
-          create: {
-            name: createParticipantDto.name,
-            socketId: createParticipantDto.socketId,
-          },
-        },
-      },
-      include: {
-        participants: true,
-      },
-    });
+  async createRoom() {
+    const newRoom = await this.prismaService.room.create({});
 
-    await this.socketService.createRouter(newRoom.uuid, newRoom.participants[0].socketId);
+    await this.socketService.createRouter(newRoom.uuid);
 
     return newRoom;
   }

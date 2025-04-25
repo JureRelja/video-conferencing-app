@@ -7,6 +7,11 @@ import { CreateParticipantDto } from './dto/create-participant.dto';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
+  @Get('room/:roomId')
+  async getRoom(@Param('roomId') roomUUID: string): Promise<Room | null> {
+    return await this.roomService.getRoom(roomUUID);
+  }
+
   @Get('/:roomId')
   async getRoomParticipants(@Param('roomId') roomUUID: string): Promise<Participant[]> {
     return await this.roomService.getRoomParticipants(roomUUID);
@@ -18,8 +23,8 @@ export class RoomController {
   }
 
   @Post('/')
-  async createRoom(@Body() createParticipantDto: CreateParticipantDto) {
-    return await this.roomService.createRoom(createParticipantDto);
+  async createRoom() {
+    return await this.roomService.createRoom();
   }
 
   @Post('/:roomUUID')
