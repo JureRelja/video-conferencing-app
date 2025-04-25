@@ -2,17 +2,9 @@
 
 import { Room } from '@/types/room';
 
-export async function startCall(socketId: string, formData: FormData) {
-  const participant = {
-    socketId: socketId,
-    name: formData.get('name'),
-  };
-
-  console.log('Participant:', participant);
-
+export async function startCall() {
   const response = await fetch(`${process.env.BACKEND_URL}/rooms/`, {
     method: 'POST',
-    body: JSON.stringify(participant),
     headers: {
       'Content-type': 'application/json',
     },
@@ -27,13 +19,30 @@ export async function startCall(socketId: string, formData: FormData) {
   return data;
 }
 
-export async function joinCall(socketId: string, formData: FormData) {
+export async function roomExists(formData: FormData) {
+  const response = await fetch(`${process.env.BACKEND_URL}/rooms/room/${formData.get('name') as string}`, {
+    headers: {
+      'Content-type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as Room;
+
+  return data;
+}
+
+//not used
+export async function joinCall(socketId: string, name: string, roomUUID: string) {
   const participant = {
     socketId: socketId,
-    name: formData.get('name'),
+    name: name,
   };
 
-  const response = await fetch(`${process.env.BACKEND_URL}/rooms/${formData.get('roomCode') as string}`, {
+  const response = await fetch(`${process.env.BACKEND_URL}/rooms/${roomUUID}`, {
     method: 'POST',
     body: JSON.stringify(participant),
     headers: {

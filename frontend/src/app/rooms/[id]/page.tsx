@@ -1,12 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { joinCall } from '@/actions';
 import Video from '@/components/video/video';
 import { Input } from '@/components/ui/input';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AppData, RtpCapabilities, TransportOptions } from 'mediasoup-client/types';
 import socket from '@/socket/socket-io';
+import { useSearchParams } from 'next/navigation';
 
 type Participant = {
   id: number;
@@ -18,6 +20,7 @@ type Participant = {
 
 export default function Home() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const [total, setTotal] = useState<number>(20);
   const [participants, setParticipants] = useState<Participant[]>();
   const [deviceData, setDeviceData] = useState<{
@@ -69,9 +72,17 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (!id || !searchParams.get('name') || !socket.id) {
+      return;
+    }
+    //join room
+    void joinCall(socket.id, searchParams.get('name') as string, id);
+
+    socket.emit('join-room', id, socket.id);
+
     getRtp()
       .then((res) => {
-        void socket.emit('join-room', { roomId: id });
+        void socket.emit('join-room', id);
 
         socket.on('new-participant-joinned', () => {
           fetchParticipants();

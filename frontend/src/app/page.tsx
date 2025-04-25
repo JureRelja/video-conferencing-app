@@ -1,36 +1,31 @@
 'use client';
-import socket from '@/socket/socket-io';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { startCall, joinCall } from '@/actions';
+import { startCall, joinCall, roomExists } from '@/actions';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
 
   const joinCallWithId = async (formData: FormData) => {
-    console.log('Socket:', socket);
-    const room = await joinCall(socket.id as string, formData);
+    const room = await roomExists(formData);
 
     console.log('Room:', room);
 
-    if (room) {
-      socket.emit('join-room', room.uuid, socket.id);
-      void router.push(`/rooms/${room.uuid}`);
+    if (room && formData.get('name')) {
+      void router.push(`/rooms/${room.uuid}?name=${formData.get('name') as string}`);
     } else {
       alert('Poziv nije pronađen. Proverite kod poziva i pokušajte ponovo.');
     }
   };
 
   const startCallWithId = async (formData: FormData) => {
-    console.log('Socket:', socket);
-    const room = await startCall(socket.id as string, formData);
+    const room = await startCall();
 
     console.log('Room:', room);
 
     if (room) {
-      socket.emit('join-room', room.uuid, socket.id);
-      void router.push(`/rooms/${room.uuid}`);
+      void router.push(`/rooms/${room.uuid}?name=${formData.get('name') as string}`);
     } else {
       alert('Nije bilo moguće započeti novi poziv. Molimo pokušajte ponovo.');
     }

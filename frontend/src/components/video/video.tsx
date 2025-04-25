@@ -26,7 +26,7 @@ export default function Video({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
   const [device, setDevice] = useState<mediasoup.types.Device | null>(null);
-  const [consumerTransports, setConsumerTransports] = useState<mediasoup.types.Transport<mediasoup.types.AppData>[]>([]);
+  const [consumerTransport, setConsumerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
   const [consumer, setConsumer] = useState<mediasoup.types.Consumer<mediasoup.types.AppData> | null>(null);
   const [producerTransport, setProducerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
   const [producer, setProducer] = useState<mediasoup.types.Producer<mediasoup.types.AppData> | null>(null);
@@ -34,6 +34,7 @@ export default function Video({
   const handleStream = (stream: MediaStream) => {
     if (element) {
       element.srcObject = stream;
+      element.muted = true;
       const tracks = stream.getVideoTracks();
 
       if (tracks.length === 0) {
@@ -136,7 +137,7 @@ export default function Video({
         dtlsParameters: deviceData.producerTransport.dtlsParameters,
       });
 
-      setConsumerTransports((prev) => [...prev, consumerTransport]);
+      setConsumerTransport(consumerTransport);
 
       consumerTransport.on('connect', ({ dtlsParameters }, callback) => {
         try {
@@ -173,7 +174,7 @@ export default function Video({
 
             handleStream(stream);
 
-            socket.emit('consumer-resume', { roomId, consumerId: consumer.id });
+            socket.emit(' ', { roomId, consumerId: consumer.id });
           }
         },
       );
