@@ -152,14 +152,20 @@ export class RoomService {
       return participant;
     }
 
-    const updatedRoom = await this.prismaService.participant.create({
-      data: {
+    const updatedRoom = await this.prismaService.participant.upsert({
+      create: {
         name: createParticipantDto.name,
         socketId: createParticipantDto.socketId,
-        room: {
-          connect: {
-            uuid: roomUUID,
-          },
+        roomUUID: roomUUID,
+      },
+      update: {
+        name: createParticipantDto.name,
+        socketId: createParticipantDto.socketId,
+      },
+      where: {
+        socketId_roomUUID: {
+          socketId: createParticipantDto.socketId,
+          roomUUID: roomUUID,
         },
       },
     });

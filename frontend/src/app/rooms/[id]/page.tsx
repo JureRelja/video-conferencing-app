@@ -31,6 +31,8 @@ export default function Home() {
   } | null>(null);
 
   const getRtp = async () => {
+    await joinCall(socket.id as string, searchParams.get('name') as string, id);
+
     const [mediaSoupRes, roomParticipantsRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/router/${id}`, {
         body: JSON.stringify({
@@ -51,6 +53,7 @@ export default function Home() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const [mediaSoupData, roomParticipantsData] = await Promise.all([mediaSoupRes.json(), roomParticipantsRes.json()]);
 
+    console.log(mediaSoupData);
     console.log(roomParticipantsData);
 
     setDeviceData(mediaSoupData);
@@ -78,20 +81,16 @@ export default function Home() {
     }
     //join room
     if (!initialized) {
-      void joinCall(socket.id, searchParams.get('name') as string, id);
+      console.log('joined room');
+      getRtp();
+
       socket.emit('join-room', id);
-      console.log(socket.id);
-
-      getRtp()
-        .then((res) => {
-          socket.on('new-participant-joinned', () => {
-            fetchParticipants();
-          });
-        })
-        .catch((err) => console.log(err));
-
       setInitialized(true);
     }
+
+    socket.on('new-participant-joinned', () => {
+      fetchParticipants();
+    });
 
     return () => {
       socket.off('new-participant-joinned');

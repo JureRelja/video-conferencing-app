@@ -29,7 +29,6 @@ export class SocketService {
 
     socket.on('disconnect', async () => {
       console.log('Client disconected', clientId);
-
       let clientIndex: null | number = null;
       let existingClients:
         | {
@@ -48,6 +47,10 @@ export class SocketService {
           clientIndex = existingClients.findIndex((client) => client.socketId === clientId);
           roomUUID = roomID;
 
+          if (clientIndex !== -1) {
+            return;
+          }
+
           // deleting empty rooms
           if (existingClients?.length === 1) {
             this.activeRooms.delete(roomUUID);
@@ -55,7 +58,7 @@ export class SocketService {
         }
       });
 
-      if (clientIndex === null || !existingClients || !roomUUID) {
+      if (clientIndex === null || !existingClients?.length || !roomUUID) {
         console.error('Client not found in any room');
         return;
       }
@@ -102,11 +105,25 @@ export class SocketService {
     socket.on('join-room', async (roomId) => {
       await socket.join(roomId);
 
-      const router = this.activeRooms.get(roomId);
+      // const participant = await this.roomService.joinRoom(roomId, { socketId: socket.id, name: 'Jure ' + socket.id });
+      // if (!participant) {
+      //   console.error('Error joining room');
+      //   return;
+      // }
+
+      let router = this.activeRooms.get(roomId);
       if (!router) {
-        console.error('Router not found for room:', roomId);
+        console.error('Router not found for room, creating a new one.');
+        await this.createRouter(roomId);
+      }
+
+      router = this.activeRooms.get(roomId);
+
+      if (!router) {
+        console.error("Router couldn't be created for room:", roomId);
         return;
       }
+
       const existingClients = this.connectedClients.get(router);
       if (!existingClients) {
         console.error('No clients connected to the router');
@@ -115,7 +132,7 @@ export class SocketService {
 
       const clientIndex = existingClients.findIndex((client) => client.socketId === socket.id);
       if (clientIndex !== -1) {
-        console.error('Client already exists in the room');
+        console.error('Client already exists in the room, returning.');
         return;
       }
 
@@ -127,14 +144,10 @@ export class SocketService {
         socketId: socket.id,
       });
 
-      const participant = await this.roomService.joinRoom(roomId, { socketId: socket.id, name: 'Jure ' + socket.id });
-      if (!participant) {
-        console.error('Error joining room');
-        return;
-      }
-      console.log('Participant joined room:', participant);
+      console.log(existingClients);
 
       socket.to(roomId).emit('new-participant-joinned');
+      return;
     });
   }
 

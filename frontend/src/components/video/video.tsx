@@ -202,15 +202,11 @@ export default function Video({
   };
 
   useEffect(() => {
-    if (initialized) {
-      return;
-    }
     void createDevice();
 
     if (isThisUser) {
       void getLocalStream();
     }
-    setInitialized(true);
   }, [isThisUser, element]);
 
   return (
