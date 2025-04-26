@@ -41,7 +41,7 @@ export default function Home() {
   // const [total, setTotal] = useState<number>(20);
 
   const videoContainer = useRef<HTMLDivElement | null>(null);
-  const [localVideo, setLocalVideo] = useState<HTMLVideoElement | null>(null);
+  const localVideo = useRef<HTMLVideoElement | null>(null);
 
   const [device, setDevice] = useState<Device | null>(null);
   const [rtpCapabilities, setRtpCapabilities] = useState<any>(null);
@@ -59,14 +59,12 @@ export default function Home() {
         video: { width: { min: 640, max: 1920 }, height: { min: 400, max: 1080 } },
       })
       .then((stream) => {
-        if (localVideo) {
-          localVideo.srcObject = stream;
+        if (localVideo.current) {
+          localVideo.current.srcObject = stream;
         }
 
         setAudioParams({ track: stream.getAudioTracks()[0], ...audioParams });
         setVideoParams({ track: stream.getVideoTracks()[0], ...videoParams });
-
-        joinRoom();
       })
       .catch(() => {
         console.error('Error accessing media devices:');
@@ -140,20 +138,38 @@ export default function Home() {
           console.error('Error while producing:', error);
         }
       });
-
-      connectSendTransport(transport);
     });
   };
 
-  const connectSendTransport = async (producerTransportLocal: mediasoup.types.Transport<mediasoup.types.AppData> | null) => {
-    if (!producerTransportLocal) return;
+  useEffect(() => {
+    if (!producerTransport) return;
+
+    console.log('Producer transport created:', producerTransport);
+
+    connectSendTransport();
+  }, [producerTransport, audioParams, videoParams]);
+
+  const connectSendTransport = async () => {
+    if (!producerTransport) return;
 
     console.log('Creating audio and video producers...');
 
+    console.log('Audio params:', audioParams);
+    console.log('Video params:', videoParams);
+
+    if (!audioParams) {
+      console.log('No audio params available');
+      return;
+    }
+    if (!videoParams) {
+      console.log('No video params available');
+      return;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const audioProducer = await producerTransportLocal.produce(audioParams);
+    const audioProducer = await producerTransport.produce(audioParams);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const videoProducer = await producerTransportLocal.produce(videoParams);
+    const videoProducer = await producerTransport.produce(videoParams);
 
     audioProducer.on('trackended', () => console.log('Audio track ended'));
     audioProducer.on('transportclose', () => console.log('Audio transport closed'));
@@ -239,7 +255,7 @@ export default function Home() {
           newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
           newElem.setAttribute('class', 'remoteVideo');
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay class="video"></video>`;
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" ></video>`;
         }
 
         videoContainer.current?.appendChild(newElem);
@@ -258,7 +274,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    getLocalStream();
+    if (!localVideo.current?.srcObject) {
+      getLocalStream();
+    }
+
+    joinRoom();
 
     socket.on('producer-closed', ({ remoteProducerId }: { remoteProducerId: string }) => {
       const consumerTransportData = consumerTransports.find((data) => data.producerId === remoteProducerId);
@@ -287,15 +307,15 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-      <div className="flex flex-wrap gap-4 justify-around w-full" ref={videoContainer}>
-        <video ref={setLocalVideo} autoPlay muted></video>
+      <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
+        <video ref={localVideo} autoPlay muted width="300px"></video>
       </div>
 
       <div className="flex items-center gap-2 justify-center w-fit">
-        <Input value={`${process.env.FRONTEND_URL}/?roomId=${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
+        <Input value={`${process.env.FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
         <Button
           onClick={() => {
-            navigator.clipboard.writeText(`${process.env.FRONTEND_URL}/?roomId=${id}`);
+            navigator.clipboard.writeText(`${process.env.FRONTEND_URL}/rooms/${id}`);
           }}>
           Kopiraj link
         </Button>
