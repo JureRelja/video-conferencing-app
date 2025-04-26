@@ -50,13 +50,13 @@ export async function joinCall(socketId: string, name: string, roomUUID: string)
     },
   });
 
-  console.log('Response:', response);
-
   if (!response.ok) {
     return null;
   }
 
   const data = (await response.json()) as Room;
+
+  console.log(data);
 
   return data;
 }

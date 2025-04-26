@@ -19,6 +19,7 @@ type Participant = {
 };
 
 export default function Home() {
+  const [initialized, setInitialized] = useState(false);
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const [total, setTotal] = useState<number>(20);
@@ -76,19 +77,21 @@ export default function Home() {
       return;
     }
     //join room
-    void joinCall(socket.id, searchParams.get('name') as string, id);
+    if (!initialized) {
+      void joinCall(socket.id, searchParams.get('name') as string, id);
+      socket.emit('join-room', id);
+      console.log(socket.id);
 
-    socket.emit('join-room', id, socket.id);
+      getRtp()
+        .then((res) => {
+          socket.on('new-participant-joinned', () => {
+            fetchParticipants();
+          });
+        })
+        .catch((err) => console.log(err));
 
-    getRtp()
-      .then((res) => {
-        void socket.emit('join-room', id);
-
-        socket.on('new-participant-joinned', () => {
-          fetchParticipants();
-        });
-      })
-      .catch((err) => console.log(err));
+      setInitialized(true);
+    }
 
     return () => {
       socket.off('new-participant-joinned');

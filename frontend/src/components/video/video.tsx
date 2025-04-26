@@ -23,6 +23,8 @@ export default function Video({
   name: string;
   total: number;
 }) {
+  const [initialized, setInitialized] = useState(false);
+  const [initializedStream, setInitializedStream] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
   const [device, setDevice] = useState<mediasoup.types.Device | null>(null);
@@ -60,20 +62,36 @@ export default function Video({
   };
 
   const createDevice = async () => {
-    const device = new mediasoup.Device();
-    await device.load({ routerRtpCapabilities: deviceData.rtpCapabilities });
+    if (device) {
+      return;
+    }
+
+    const deviceLocal = new mediasoup.Device();
+    await deviceLocal.load({ routerRtpCapabilities: deviceData.rtpCapabilities });
 
     setDevice(device);
   };
 
   useEffect(() => {
+    if (initializedStream) {
+      return;
+    }
+
     if (device) {
       if (isThisUser) {
+        if (!deviceData.producerTransport) {
+          return;
+        }
         void createProducer();
       } else {
+        if (!deviceData.consumerTransport) {
+          return;
+        }
         createConsumer();
       }
     }
+
+    setInitializedStream(true);
   }, [device]);
 
   const createProducer = async () => {
@@ -184,13 +202,15 @@ export default function Video({
   };
 
   useEffect(() => {
+    if (initialized) {
+      return;
+    }
     void createDevice();
 
     if (isThisUser) {
       void getLocalStream();
-    } else {
-      // Handle remote stream
     }
+    setInitialized(true);
   }, [isThisUser, element]);
 
   return (

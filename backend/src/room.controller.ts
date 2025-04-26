@@ -28,7 +28,7 @@ export class RoomController {
   }
 
   @Post('/:roomUUID')
-  async joinRoom(@Param('roomUUID') roomUUID: string, @Body() createParticipantDto: CreateParticipantDto): Promise<Room | null> {
+  async joinRoom(@Param('roomUUID') roomUUID: string, @Body() createParticipantDto: CreateParticipantDto) {
     return await this.roomService.joinRoom(roomUUID, createParticipantDto);
   }
 }

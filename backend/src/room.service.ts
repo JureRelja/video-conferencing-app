@@ -73,6 +73,12 @@ export class RoomService {
   }
 
   async createWebRTCTransports(router: Router<AppData>, socketId: string) {
+    const isTransportCreated = this.socketService.checkTransports(router, socketId);
+
+    if (isTransportCreated) {
+      return isTransportCreated;
+    }
+
     const webRTCTrasportOptions = {
       listenIps: [
         {
@@ -115,7 +121,13 @@ export class RoomService {
   }
 
   async createRoom() {
-    const newRoom = await this.prismaService.room.create({});
+    const newRoom = await this.prismaService.room.create({
+      data: {
+        participants: {
+          create: [],
+        },
+      },
+    });
 
     await this.socketService.createRouter(newRoom.uuid);
 
@@ -127,30 +139,28 @@ export class RoomService {
   // }
 
   async joinRoom(roomUUID: string, createParticipantDto: CreateParticipantDto) {
-    const room = await this.prismaService.room.findUnique({
+    const participant = await this.prismaService.participant.findUnique({
       where: {
-        uuid: roomUUID,
+        socketId_roomUUID: {
+          socketId: createParticipantDto.socketId,
+          roomUUID: roomUUID,
+        },
       },
     });
 
-    if (!room) {
-      return null;
+    if (participant) {
+      return participant;
     }
 
-    const updatedRoom = await this.prismaService.room.update({
-      where: {
-        uuid: roomUUID,
-      },
+    const updatedRoom = await this.prismaService.participant.create({
       data: {
-        participants: {
-          create: {
-            name: createParticipantDto.name,
-            socketId: createParticipantDto.socketId,
+        name: createParticipantDto.name,
+        socketId: createParticipantDto.socketId,
+        room: {
+          connect: {
+            uuid: roomUUID,
           },
         },
-      },
-      include: {
-        participants: true,
       },
     });
 

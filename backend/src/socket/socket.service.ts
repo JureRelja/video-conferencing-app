@@ -113,6 +113,12 @@ export class SocketService {
         return;
       }
 
+      const clientIndex = existingClients.findIndex((client) => client.socketId === socket.id);
+      if (clientIndex !== -1) {
+        console.error('Client already exists in the room');
+        return;
+      }
+
       existingClients.push({
         producerTransport: null,
         consumers: [],
@@ -130,6 +136,29 @@ export class SocketService {
 
       socket.to(roomId).emit('new-participant-joinned');
     });
+  }
+
+  checkTransports(router: Router<AppData>, socketId: string) {
+    const existingClients = this.connectedClients.get(router);
+
+    if (!existingClients) {
+      console.error('No clients connected to the router');
+      return;
+    }
+
+    const client = existingClients.find((client) => client.socketId === socketId);
+
+    if (!client) {
+      console.error('Client not found in the connected clients');
+      return false;
+    }
+
+    if (client.producerTransport && client.consumerTransport) {
+      console.log('Transports already created');
+      return { producerTransport: client.producerTransport, consumerTransport: client.consumerTransport };
+    }
+
+    return;
   }
 
   async resumeConsumer(socket: Socket, roomId: string, consumerId: string) {

@@ -68,7 +68,7 @@ export default function Home() {
               name="roomCode"
               placeholder="Unesite kod poziva, npr. f20jf04j043f0344fj0"
             />
-            <Button onClick={() => joinCall}>Pridruži se</Button>
+            <Button type="submit">Pridruži se</Button>
           </div>
         </form>
       </div>
