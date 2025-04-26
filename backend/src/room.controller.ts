@@ -19,7 +19,7 @@ export class RoomController {
 
   @Post('/router/:roomId')
   createStream(@Param('roomId') roomId: string, @Body() body: { socketId: string }) {
-    return this.roomService.createStream(roomId, body.socketId);
+    // return this.roomService.createStream(roomId, body.socketId);
   }
 
   @Post('/')

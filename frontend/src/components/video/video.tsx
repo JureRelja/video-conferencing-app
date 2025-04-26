@@ -23,8 +23,6 @@ export default function Video({
   name: string;
   total: number;
 }) {
-  const [initialized, setInitialized] = useState(false);
-  const [initializedStream, setInitializedStream] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
   const [device, setDevice] = useState<mediasoup.types.Device | null>(null);
@@ -69,29 +67,24 @@ export default function Video({
     const deviceLocal = new mediasoup.Device();
     await deviceLocal.load({ routerRtpCapabilities: deviceData.rtpCapabilities });
 
-    setDevice(device);
+    setDevice(deviceLocal);
+    console.log(deviceData);
   };
 
   useEffect(() => {
-    if (initializedStream) {
-      return;
-    }
-
     if (device) {
       if (isThisUser) {
-        if (!deviceData.producerTransport) {
+        if (producerTransport) {
           return;
         }
         void createProducer();
       } else {
-        if (!deviceData.consumerTransport) {
+        if (consumerTransport) {
           return;
         }
         createConsumer();
       }
     }
-
-    setInitializedStream(true);
   }, [device]);
 
   const createProducer = async () => {
@@ -139,6 +132,8 @@ export default function Video({
         },
       });
 
+      console.log('Producer:', producer);
+
       setProducer(producer);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
@@ -149,15 +144,16 @@ export default function Video({
   const createConsumer = () => {
     try {
       const consumerTransport = device!.createRecvTransport({
-        id: deviceData.producerTransport.id,
-        iceParameters: deviceData.producerTransport.iceParameters,
-        iceCandidates: deviceData.producerTransport.iceCandidates,
-        dtlsParameters: deviceData.producerTransport.dtlsParameters,
+        id: deviceData.consumerTransport.id,
+        iceParameters: deviceData.consumerTransport.iceParameters,
+        iceCandidates: deviceData.consumerTransport.iceCandidates,
+        dtlsParameters: deviceData.consumerTransport.dtlsParameters,
       });
 
       setConsumerTransport(consumerTransport);
 
       consumerTransport.on('connect', ({ dtlsParameters }, callback) => {
+        console.log('Connecting consumer transport');
         try {
           socket.emit('connect-consumer-transport', { roomId, dtlsParameters });
           callback();
@@ -166,36 +162,45 @@ export default function Video({
         }
       });
 
-      socket.emit(
-        'consume-transport',
-        { roomId: roomId, rtpCapabilities: device!.rtpCapabilities, producerSocketId: socketId },
-        async (data: {
-          producerId: string | undefined;
-          id: string | undefined;
-          rtpParameters: RtpParameters;
-          kind: 'audio' | 'video' | undefined;
-        }) => {
-          if (!data.id || !data.producerId || !data.kind || !data.rtpParameters) {
-            console.error('Error while consuming stream');
-          } else {
-            const consumer = await consumerTransport.consume({
-              id: data.id,
-              producerId: data.producerId,
-              rtpParameters: data.rtpParameters,
-              kind: data.kind,
-            });
+      consumerTransport.on('connectionstatechange', (state) => {
+        if (state === 'connected') {
+          console.log('Consumer transport connected');
+          socket.emit(
+            'consume-transport',
+            { roomId: roomId, rtpCapabilities: device!.rtpCapabilities, producerSocketId: socketId },
+            async (data: {
+              producerId: string | undefined;
+              id: string | undefined;
+              rtpParameters: RtpParameters;
+              kind: 'audio' | 'video' | undefined;
+            }) => {
+              if (!data.id || !data.producerId || !data.kind || !data.rtpParameters) {
+                console.error('Error while consuming stream');
+              } else {
+                const consumer = await consumerTransport.consume({
+                  id: data.id,
+                  producerId: data.producerId,
+                  rtpParameters: data.rtpParameters,
+                  kind: data.kind,
+                });
 
-            setConsumer(consumer);
+                console.log('Consumer:', consumer);
 
-            const stream = new MediaStream();
-            stream.addTrack(consumer.track);
+                setConsumer(consumer);
 
-            handleStream(stream);
+                const stream = new MediaStream();
+                stream.addTrack(consumer.track);
 
-            socket.emit(' ', { roomId, consumerId: consumer.id });
-          }
-        },
-      );
+                handleStream(stream);
+
+                socket.emit('consumer-resume', { roomId, consumerId: consumer.id });
+              }
+            },
+          );
+        } else if (state === 'failed') {
+          console.error('Consumer transport failed');
+        }
+      });
     } catch (err) {
       console.log(err);
     }

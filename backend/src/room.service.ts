@@ -47,78 +47,78 @@ export class RoomService {
     }
   }
 
-  async createStream(roomUUID: string, socketId: string) {
-    const router = this.socketService.getRouter(roomUUID);
+  // async createStream(roomUUID: string, socketId: string) {
+  //   const router = this.socketService.getRouter(roomUUID);
 
-    if (!router) {
-      return null;
-    }
-    const transports = await this.createWebRTCTransports(router, socketId);
+  //   if (!router) {
+  //     return null;
+  //   }
+  //   const transports = await this.createWebRTCTransports(router, socketId);
 
-    return {
-      rtpCapabilities: router.rtpCapabilities,
-      producerTransport: {
-        id: transports.producerTransport.id,
-        iceParameters: transports.producerTransport.iceParameters,
-        iceCandidates: transports.producerTransport.iceCandidates,
-        dtlsParameters: transports.producerTransport.dtlsParameters,
-      },
-      consumerTransport: {
-        id: transports.consumerTransport.id,
-        iceParameters: transports.consumerTransport.iceParameters,
-        iceCandidates: transports.consumerTransport.iceCandidates,
-        dtlsParameters: transports.consumerTransport.dtlsParameters,
-      },
-    };
-  }
+  //   return {
+  //     rtpCapabilities: router.rtpCapabilities,
+  //     producerTransport: {
+  //       id: transports.producerTransport.id,
+  //       iceParameters: transports.producerTransport.iceParameters,
+  //       iceCandidates: transports.producerTransport.iceCandidates,
+  //       dtlsParameters: transports.producerTransport.dtlsParameters,
+  //     },
+  //     consumerTransport: {
+  //       id: transports.consumerTransport.id,
+  //       iceParameters: transports.consumerTransport.iceParameters,
+  //       iceCandidates: transports.consumerTransport.iceCandidates,
+  //       dtlsParameters: transports.consumerTransport.dtlsParameters,
+  //     },
+  //   };
+  // }
 
-  async createWebRTCTransports(router: Router<AppData>, socketId: string) {
-    const isTransportCreated = this.socketService.checkTransports(router, socketId);
+  // async createWebRTCTransports(router: Router<AppData>, socketId: string) {
+  //   const isTransportCreated = this.socketService.checkTransports(router, socketId);
 
-    if (isTransportCreated) {
-      return isTransportCreated;
-    }
+  //   if (isTransportCreated) {
+  //     return isTransportCreated;
+  //   }
 
-    const webRTCTrasportOptions = {
-      listenIps: [
-        {
-          ip: '127.0.0.1',
-        },
-      ],
-      enableUdp: true,
-      enableTcp: true,
-      preferUdp: true,
-    };
+  //   const webRTCTrasportOptions = {
+  //     listenIps: [
+  //       {
+  //         ip: '127.0.0.1',
+  //       },
+  //     ],
+  //     enableUdp: true,
+  //     enableTcp: true,
+  //     preferUdp: true,
+  //   };
 
-    const consumerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
+  //   const consumerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
 
-    consumerTransport.on('dtlsstatechange', (dtlsState) => {
-      if (dtlsState === 'closed') {
-        consumerTransport.close();
-      }
-    });
-    consumerTransport.on('@close', () => {
-      console.log('Transport closed');
-    });
+  //   consumerTransport.on('dtlsstatechange', (dtlsState) => {
+  //     if (dtlsState === 'closed') {
+  //       consumerTransport.close();
+  //     }
+  //   });
+  //   consumerTransport.on('@close', () => {
+  //     console.log('Transport closed');
+  //   });
 
-    //
+  //   //
 
-    const producerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
-    producerTransport.on('dtlsstatechange', (dtlsState) => {
-      if (dtlsState === 'closed') {
-        producerTransport.close();
-      }
-    });
-    producerTransport.on('@close', () => {
-      console.log('Transport closed');
-    });
+  //   const producerTransport = await router.createWebRtcTransport(webRTCTrasportOptions);
+  //   producerTransport.on('dtlsstatechange', (dtlsState) => {
+  //     if (dtlsState === 'closed') {
+  //       producerTransport.close();
+  //     }
+  //   });
+  //   producerTransport.on('@close', () => {
+  //     console.log('Transport closed');
+  //   });
 
-    //
+  //   //
 
-    this.socketService.addTransports(router, socketId, producerTransport, consumerTransport);
+  //   // this.socketService.addTransports(router, socketId, producerTransport, consumerTransport);
 
-    return { producerTransport, consumerTransport };
-  }
+  //   return { producerTransport, consumerTransport };
+  // }
 
   async createRoom() {
     const newRoom = await this.prismaService.room.create({
@@ -129,7 +129,7 @@ export class RoomService {
       },
     });
 
-    await this.socketService.createRouter(newRoom.uuid);
+    // await this.socketService.createRouter(newRoom.uuid);
 
     return newRoom;
   }

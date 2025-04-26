@@ -20,7 +20,7 @@ export async function startCall() {
 }
 
 export async function roomExists(formData: FormData) {
-  const response = await fetch(`${process.env.BACKEND_URL}/rooms/room/${formData.get('name') as string}`, {
+  const response = await fetch(`${process.env.BACKEND_URL}/rooms/room/${formData.get('roomCode') as string}`, {
     headers: {
       'Content-type': 'application/json',
     },
