@@ -16,6 +16,7 @@ type TransportParams = {
   iceParameters: any;
   iceCandidates: any;
   dtlsParameters: any;
+  iceServers: any;
 };
 
 type ConsumerTransportData = {
@@ -254,6 +255,8 @@ export default function Home() {
         }
 
         socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId });
+
+        console.log('Consumer resume');
       },
     );
   };

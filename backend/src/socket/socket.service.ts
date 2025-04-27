@@ -153,6 +153,20 @@ export class SocketService {
 
       const router = room.router;
 
+      const iceServers = [
+        { urls: 'stun:stun.ekiga.net' },
+        { urls: 'stun:stun.schlund.de' },
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        { urls: 'stun:stun.voipbuster.com' },
+        { urls: 'stun:stun.voipstunt.com' },
+        { urls: 'stun:stun.xten.com' },
+        { urls: 'turn:relay1.expressturn.com:3478', username: 'efKQFKTVZ46CD0JGNE', credential: 'CbUyVUAn6AAc595o' },
+      ];
+
       try {
         const transport = await this.createWebRtcTransport(router);
         callback({
@@ -161,6 +175,7 @@ export class SocketService {
             iceParameters: transport.iceParameters,
             iceCandidates: transport.iceCandidates,
             dtlsParameters: transport.dtlsParameters,
+            iceServers: iceServers,
           },
         });
 
