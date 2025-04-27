@@ -1,34 +1,23 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { startCall, roomExists } from '@/actions';
+import { startCall } from '@/actions';
 import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Home() {
   const router = useRouter();
 
-  const joinCallWithId = async (formData: FormData) => {
-    const room = await roomExists(formData);
+  const joinCallWithId = (formData: FormData) => {
+    const roomCode = formData.get('roomCode') as string;
 
-    console.log('Room:', room);
-
-    if (room && formData.get('name')) {
-      void router.push(`/rooms/${room.uuid}?name=${formData.get('name') as string}`);
-    } else {
-      alert('Poziv nije pronađen. Proverite kod poziva i pokušajte ponovo.');
-    }
+    void router.push(`/rooms/${roomCode}?name=${formData.get('name') as string}`);
   };
 
-  const startCallWithId = async (formData: FormData) => {
-    const room = await startCall();
+  const startCallWithId = (formData: FormData) => {
+    const roomCode = uuidv4();
 
-    console.log('Room:', room);
-
-    if (room) {
-      void router.push(`/rooms/${room.uuid}?name=${formData.get('name') as string}`);
-    } else {
-      alert('Nije bilo moguće započeti novi poziv. Molimo pokušajte ponovo.');
-    }
+    void router.push(`/rooms/${roomCode}?name=${formData.get('name') as string}`);
   };
 
   return (
