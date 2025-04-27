@@ -27,8 +27,10 @@ export default function Video({
   const [element, setElement] = useState<HTMLVideoElement | null>(null);
   const [device, setDevice] = useState<mediasoup.types.Device | null>(null);
   const [consumerTransport, setConsumerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [consumer, setConsumer] = useState<mediasoup.types.Consumer<mediasoup.types.AppData> | null>(null);
   const [producerTransport, setProducerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [producer, setProducer] = useState<mediasoup.types.Producer<mediasoup.types.AppData> | null>(null);
 
   const handleStream = (stream: MediaStream) => {
