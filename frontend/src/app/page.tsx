@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { startCall, joinCall, roomExists } from '@/actions';
+import { startCall, roomExists } from '@/actions';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
