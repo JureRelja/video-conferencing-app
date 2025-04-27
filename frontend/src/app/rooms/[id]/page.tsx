@@ -292,10 +292,10 @@ export default function Home() {
       </div>
 
       <div className="flex items-center gap-2 justify-center w-fit">
-        <Input value={`${process.env.FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
+        <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
         <Button
           onClick={() => {
-            navigator.clipboard.writeText(`${process.env.FRONTEND_URL}/rooms/${id}`);
+            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
           }}>
           Kopiraj link
         </Button>

@@ -3,7 +3,7 @@
 import { Room } from '@/types/room';
 
 export async function startCall() {
-  const response = await fetch(`${process.env.BACKEND_URL}/rooms/`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/`, {
     method: 'POST',
     headers: {
       'Content-type': 'application/json',
@@ -20,7 +20,7 @@ export async function startCall() {
 }
 
 export async function roomExists(formData: FormData) {
-  const response = await fetch(`${process.env.BACKEND_URL}/rooms/room/${formData.get('roomCode') as string}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/room/${formData.get('roomCode') as string}`, {
     headers: {
       'Content-type': 'application/json',
     },
@@ -42,7 +42,7 @@ export async function joinCall(socketId: string, name: string, roomUUID: string)
     name: name,
   };
 
-  const response = await fetch(`${process.env.BACKEND_URL}/rooms/${roomUUID}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${roomUUID}`, {
     method: 'POST',
     body: JSON.stringify(participant),
     headers: {
