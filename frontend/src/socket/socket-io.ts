@@ -1,7 +1,7 @@
 'use client';
 import { io } from 'socket.io-client';
 
-const socket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, {});
+const socket = io(`http://${process.env.NEXT_PUBLIC_BACKEND_URL}`, {});
 
 socket.connect();
 
