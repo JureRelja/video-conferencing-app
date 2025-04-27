@@ -10,7 +10,6 @@ import { useEffect, useRef } from 'react';
 import { Device } from 'mediasoup-client';
 import * as mediasoup from 'mediasoup-client';
 import socket from '@/socket/socket-io';
-import { create } from 'domain';
 
 type TransportParams = {
   id: string;
