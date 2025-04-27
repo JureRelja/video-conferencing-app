@@ -13,6 +13,7 @@
     "@tailwindcss/oxide": "^4.1.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lightningcss": "^1.29.3",
     "lucide-react": "^0.483.0",
     "mediasoup-client": "^3.9.5",
     "next": "15.2.3",
