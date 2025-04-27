@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import {
   AppData,
@@ -13,7 +13,6 @@ import {
   WebRtcTransport,
   Worker,
 } from 'mediasoup/types';
-import { RoomService } from 'src/room.service';
 import * as mediasoup from 'mediasoup';
 
 interface Room {
@@ -56,10 +55,7 @@ interface ConsumerData {
 
 @Injectable()
 export class SocketService {
-  constructor(
-    @Inject(forwardRef(() => RoomService))
-    private readonly roomService: RoomService,
-  ) {}
+  constructor() {}
 
   private worker: Worker<AppData> | null = null;
 
@@ -320,7 +316,7 @@ export class SocketService {
   async createWorker(): Promise<Worker<AppData>> {
     this.worker = await mediasoup.createWorker({
       rtcMinPort: 2000,
-      rtcMaxPort: 2020,
+      rtcMaxPort: 2900,
     });
     console.log(`worker pid ${this.worker.pid}`);
 
@@ -383,7 +379,8 @@ export class SocketService {
     const webRtcTransportOptions = {
       listenIps: [
         {
-          ip: '127.0.0.1',
+          ip: '0.0.0.0',
+          announcedIp: process.env.BACKEND_IP,
         },
       ],
       enableUdp: true,

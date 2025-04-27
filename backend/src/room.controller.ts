@@ -8,13 +8,13 @@ export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
   @Get('room/:roomId')
-  async getRoom(@Param('roomId') roomUUID: string): Promise<Room | null> {
-    return await this.roomService.getRoom(roomUUID);
+  async getRoom(@Param('roomId') roomUUID: string) {
+    // return await this.roomService.getRoom(roomUUID);
   }
 
   @Get('/:roomId')
-  async getRoomParticipants(@Param('roomId') roomUUID: string): Promise<Participant[]> {
-    return await this.roomService.getRoomParticipants(roomUUID);
+  async getRoomParticipants(@Param('roomId') roomUUID: string) {
+    // return await this.roomService.getRoomParticipants(roomUUID);
   }
 
   @Post('/router/:roomId')
@@ -29,6 +29,6 @@ export class RoomController {
 
   @Post('/:roomUUID')
   async joinRoom(@Param('roomUUID') roomUUID: string, @Body() createParticipantDto: CreateParticipantDto) {
-    return await this.roomService.joinRoom(roomUUID, createParticipantDto);
+    // return await this.roomService.joinRoom(roomUUID, createParticipantDto);
   }
 }
