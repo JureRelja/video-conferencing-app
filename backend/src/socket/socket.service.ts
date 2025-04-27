@@ -299,11 +299,12 @@ export class SocketService {
           }
         } catch (error) {
           console.error(error);
-          // callback({
-          //   params: {
-          //     error: error.message as string,
-          //   },
-          // });
+          callback({
+            params: {
+              // @ts-ignore
+              error: error.message as string,
+            },
+          });
         }
       },
     );

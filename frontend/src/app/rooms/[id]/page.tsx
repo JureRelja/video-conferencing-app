@@ -6,10 +6,11 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Device } from 'mediasoup-client';
 import * as mediasoup from 'mediasoup-client';
 import socket from '@/socket/socket-io';
+import { create } from 'domain';
 
 type TransportParams = {
   id: string;
@@ -36,21 +37,18 @@ const params = {
 
 export default function Home() {
   const { id } = useParams<{ id: string }>();
-  // const searchParams = useSearchParams();
-  // const [participants, setParticipants] = useState<Participant[]>([]);
-  // const [total, setTotal] = useState<number>(20);
 
+  const deviceRef = useRef<Device | null>(null); // Ref to store the latest device state
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
-  const [device, setDevice] = useState<Device | null>(null);
-  const [rtpCapabilities, setRtpCapabilities] = useState<any>(null);
-  const [producerTransport, setProducerTransport] = useState<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
-  const [consumerTransports, setConsumerTransports] = useState<ConsumerTransportData[]>([]);
-  const [consumingTransports, setConsumingTransports] = useState<string[]>([]);
+  const rtpCapabilitiesRef = useRef<any>(null);
+  const producerTransportRef = useRef<mediasoup.types.Transport<mediasoup.types.AppData> | null>(null);
+  const consumerTransportsRef = useRef<ConsumerTransportData[]>([]);
+  const consumingTransportsRef = useRef<string[]>([]);
 
-  const [audioParams, setAudioParams] = useState<any>(null);
-  const [videoParams, setVideoParams] = useState<any>({ params });
+  const audioParamsRef = useRef<any>(null);
+  const videoParamsRef = useRef<any>({ params });
 
   const getLocalStream = () => {
     navigator.mediaDevices
@@ -63,8 +61,10 @@ export default function Home() {
           localVideo.current.srcObject = stream;
         }
 
-        setAudioParams({ track: stream.getAudioTracks()[0], ...audioParams });
-        setVideoParams({ track: stream.getVideoTracks()[0], ...videoParams });
+        audioParamsRef.current = { track: stream.getAudioTracks()[0], ...audioParamsRef.current };
+        videoParamsRef.current = { track: stream.getVideoTracks()[0], ...videoParamsRef.current };
+
+        joinRoom();
       })
       .catch(() => {
         console.error('Error accessing media devices:');
@@ -74,8 +74,8 @@ export default function Home() {
   const joinRoom = () => {
     socket.emit('joinRoom', { roomName: id }, (data: { rtpCapabilities: any }) => {
       console.log(`Router RTP Capabilities: ${data.rtpCapabilities}`);
-      setRtpCapabilities(data.rtpCapabilities);
-      void createDevice(data.rtpCapabilities);
+      rtpCapabilitiesRef.current = data.rtpCapabilities;
+      createDevice(data.rtpCapabilities);
     });
   };
 
@@ -85,7 +85,8 @@ export default function Home() {
       await newDevice.load({ routerRtpCapabilities: rtpCapabilitiesLocal });
       console.log('Device RTP Capabilities:', newDevice.rtpCapabilities);
 
-      setDevice(newDevice);
+      deviceRef.current = newDevice; // Update the ref with the new device instance
+      createSendTransport();
     } catch (error: any) {
       console.error('Error creating device:', error);
       if (error.name === 'UnsupportedError') {
@@ -94,13 +95,6 @@ export default function Home() {
     }
   };
 
-  //just to start the create
-  useEffect(() => {
-    if (!device) return;
-
-    createSendTransport();
-  }, [device]);
-
   const createSendTransport = () => {
     socket.emit('createWebRtcTransport', { consumer: false }, ({ params }: { params: TransportParams }) => {
       if (!params) {
@@ -108,12 +102,12 @@ export default function Home() {
         return;
       }
 
-      if (!device) return;
+      if (!deviceRef.current) return;
 
       console.log('Creating send transport...');
 
-      const transport = device.createSendTransport(params);
-      setProducerTransport(transport);
+      const transport = deviceRef.current.createSendTransport(params);
+      producerTransportRef.current = transport;
 
       transport.on('connect', ({ dtlsParameters }, callback) => {
         try {
@@ -138,38 +132,30 @@ export default function Home() {
           console.error('Error while producing:', error);
         }
       });
+
+      connectSendTransport();
     });
   };
 
-  useEffect(() => {
-    if (!producerTransport) return;
-
-    console.log('Producer transport created:', producerTransport);
-
-    connectSendTransport();
-  }, [producerTransport, audioParams, videoParams]);
-
   const connectSendTransport = async () => {
-    if (!producerTransport) return;
+    if (!producerTransportRef.current) return;
 
     console.log('Creating audio and video producers...');
 
-    console.log('Audio params:', audioParams);
-    console.log('Video params:', videoParams);
+    console.log('Audio params:', audioParamsRef.current);
+    console.log('Video params:', videoParamsRef.current);
 
-    if (!audioParams) {
+    if (!audioParamsRef.current) {
       console.log('No audio params available');
       return;
     }
-    if (!videoParams) {
+    if (!videoParamsRef.current) {
       console.log('No video params available');
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const audioProducer = await producerTransport.produce(audioParams);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const videoProducer = await producerTransport.produce(videoParams);
+    const audioProducer = await producerTransportRef.current.produce(audioParamsRef.current);
+    const videoProducer = await producerTransportRef.current.produce(videoParamsRef.current);
 
     audioProducer.on('trackended', () => console.log('Audio track ended'));
     audioProducer.on('transportclose', () => console.log('Audio transport closed'));
@@ -185,8 +171,9 @@ export default function Home() {
   };
 
   const signalNewConsumerTransport = (remoteProducerId: string) => {
-    if (consumingTransports.includes(remoteProducerId)) return;
-    setConsumingTransports((prev) => [...prev, remoteProducerId]);
+    if (consumingTransportsRef.current.includes(remoteProducerId)) return;
+
+    consumingTransportsRef.current.push(remoteProducerId);
 
     socket.emit('createWebRtcTransport', { consumer: true }, ({ params }: { params: TransportParams }) => {
       if (!params) {
@@ -194,11 +181,14 @@ export default function Home() {
         return;
       }
 
-      if (!device) return;
+      const currentDevice = deviceRef.current;
+      if (!currentDevice) {
+        console.error('Device is not ready');
+        return;
+      }
 
-      const transport = device.createRecvTransport(params);
+      const transport = currentDevice.createRecvTransport(params);
 
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       transport.on('connect', ({ dtlsParameters }, callback) => {
         try {
           socket.emit('transport-recv-connect', { dtlsParameters, serverConsumerTransportId: params.id });
@@ -217,11 +207,13 @@ export default function Home() {
     remoteProducerId: string,
     serverConsumerTransportId: string,
   ) => {
-    if (!device) return;
+    if (!deviceRef.current) return;
+
+    console.log('Creating consumer...');
 
     socket.emit(
       'consume',
-      { rtpCapabilities: device.rtpCapabilities, remoteProducerId, serverConsumerTransportId },
+      { rtpCapabilities: deviceRef.current.rtpCapabilities, remoteProducerId, serverConsumerTransportId },
       async ({ params }: { params: any }) => {
         if (params.error) {
           console.error('Cannot consume:', params.error);
@@ -235,18 +227,14 @@ export default function Home() {
           rtpParameters: params.rtpParameters,
         });
 
-        setConsumerTransports((prev) => [
-          ...prev,
-          {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            consumerTransport: transport,
-            serverConsumerTransportId: params.id,
-            producerId: remoteProducerId,
-            consumer,
-          },
-        ]);
+        consumerTransportsRef.current.push({
+          consumerTransport: transport,
+          serverConsumerTransportId: params.id,
+          producerId: remoteProducerId,
+          consumer,
+        });
 
-        if (!videoContainer) return;
+        if (!videoContainer.current) return;
 
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
@@ -258,16 +246,14 @@ export default function Home() {
           newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" ></video>`;
         }
 
-        videoContainer.current?.appendChild(newElem);
+        videoContainer.current.appendChild(newElem);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const { track } = consumer;
         const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
         if (mediaElement) {
           mediaElement.srcObject = new MediaStream([track]);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId });
       },
     );
@@ -278,20 +264,16 @@ export default function Home() {
       getLocalStream();
     }
 
-    joinRoom();
-
     socket.on('producer-closed', ({ remoteProducerId }: { remoteProducerId: string }) => {
-      const consumerTransportData = consumerTransports.find((data) => data.producerId === remoteProducerId);
+      const consumerTransportData = consumerTransportsRef.current.find((data) => data.producerId === remoteProducerId);
       if (consumerTransportData) {
         consumerTransportData.consumerTransport.close();
         consumerTransportData.consumer.close();
-        setConsumerTransports((prev) => prev.filter((data) => data.producerId !== remoteProducerId));
+        consumerTransportsRef.current = consumerTransportsRef.current.filter((data) => data.producerId !== remoteProducerId);
 
-        if (videoContainer) {
-          const videoElement = document.getElementById(`td-${remoteProducerId}`);
-          if (videoElement) {
-            videoContainer.current?.removeChild(videoElement);
-          }
+        const videoElement = document.getElementById(`td-${remoteProducerId}`);
+        if (videoElement) {
+          videoElement.remove();
         }
       }
     });
@@ -301,7 +283,6 @@ export default function Home() {
     return () => {
       socket.off('producer-closed');
       socket.off('new-producer');
-      socket.off('connection-success');
     };
   }, []);
 
