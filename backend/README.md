@@ -97,3 +97,36 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Instructions for VM
+
+sudo apt update && sudo apt upgrade -y
+
+sudo apt install -y docker.io docker-compose
+sudo systemctl enable docker
+sudo systemctl start docker
+
+sudo apt install -y git
+
+git clone https://github.com/JureRelja/video-conferencing-app.git
+
+cd video-conferencing-app/backend
+
+sudo docker build --platform linux/amd64 -t video-app-backend .
+
+docker save -o video-app-backend.tar video-app-backend
+
+scp video-app-backend.tar root@146.190.28.111
+
+docker load < /root/video-app-backend.tar
+
+sudo docker run -d --name video-app-backend \
+ -p 3001:3001 \
+ -p 2000-3000:2000-3000/udp \
+ -e PORT=3001 \
+ -e BACKEND_IP=146.190.28.111 \
+ video-app-backend
+
+sudo docker start video-app-backend
+
+146.190.28.111:3001
