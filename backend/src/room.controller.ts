@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { RoomService } from './room.service';
-import { Room, Participant } from '@prisma/client';
 import { CreateParticipantDto } from './dto/create-participant.dto';
 
 @Controller('/rooms')
