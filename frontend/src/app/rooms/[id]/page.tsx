@@ -38,7 +38,7 @@ const params = {
 export default function Home() {
   const { id } = useParams<{ id: string }>();
 
-  const deviceRef = useRef<Device | null>(null);
+  const deviceRef = useRef<Device | null>(null); // Ref to store the latest device state
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
@@ -85,7 +85,7 @@ export default function Home() {
       await newDevice.load({ routerRtpCapabilities: rtpCapabilitiesLocal });
       console.log('Device RTP Capabilities:', newDevice.rtpCapabilities);
 
-      deviceRef.current = newDevice;
+      deviceRef.current = newDevice; // Update the ref with the new device instance
       createSendTransport();
     } catch (error: any) {
       console.error('Error creating device:', error);
@@ -239,12 +239,11 @@ export default function Home() {
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
 
-        newElem.setAttribute('class', 'w-[300px] max-h-[200px] object-contain relative');
-
         if (params.kind === 'audio') {
           newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay class="w-full h-full object-contain"></video>`;
+          newElem.setAttribute('class', 'remoteVideo');
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" height="200px"></video>`;
         }
 
         videoContainer.current.appendChild(newElem);
