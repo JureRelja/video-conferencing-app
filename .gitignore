@@ -107,3 +107,5 @@ yarn-error.log*
 next-env.d.ts
 
 next.config.ts
+
+*.tar

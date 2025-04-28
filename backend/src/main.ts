@@ -2,11 +2,18 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
+import { readFileSync } from 'fs';
 
 dotenv.config();
 
 async function bootstrap() {
+  const httpsOptions = {
+    key: readFileSync('ssl/key.pem'),
+    cert: readFileSync('ssl/cert.pem'),
+  };
+
   const app = await NestFactory.create(AppModule, {
+    httpsOptions,
     logger: ['error', 'warn', 'log'],
   });
 
