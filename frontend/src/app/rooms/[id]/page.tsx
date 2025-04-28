@@ -243,7 +243,7 @@ export default function Home() {
           newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
           newElem.setAttribute('class', 'remoteVideo');
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" height="200px"></video>`;
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" className="w-full max-w-[300px] h-auto object-cover"></video>`;
         }
 
         videoContainer.current.appendChild(newElem);
@@ -291,7 +291,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-        <video ref={localVideo} autoPlay muted width="300px" height="200px"></video>
+        <video ref={localVideo} autoPlay muted width="300px" className="w-full max-w-[300px] h-auto object-cover"></video>
       </div>
 
       <div className="flex items-center gap-2 justify-center w-fit">
