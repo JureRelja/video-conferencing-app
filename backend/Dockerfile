@@ -19,7 +19,6 @@ RUN apt-get install -y nodejs
 WORKDIR /
 
 COPY package.json .
-RUN npm install
 COPY . .
 
 RUN rm -rf node_modules package-lock.json

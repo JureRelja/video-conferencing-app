@@ -114,7 +114,7 @@ cd video-conferencing-app/backend -->
 
 sudo docker build --platform linux/amd64 -t video-app-backend .
 
-sudo docker build --no-cache -t video-app-backend .
+<!-- sudo docker build --no-cache -t video-app-backend . -->
 
 docker save -o video-app-backend.tar video-app-backend
 
@@ -136,15 +136,6 @@ docker run --platform linux/amd64 -d --name video-app-backend \
  -e DEBUG="mediasoup\*" \
  video-app-backend
 
-docker run -d --name video-app-backend \
- -p 3001:3001 \
- -p 2000-3000:2000-3000/udp \
- -e BACKEND_IP=127.0.0.1 \
- -e DEBUG="mediasoup\*" \
- video-app-backend
-
 docker remove video-app-backend && docker image rm video-app-backend
 
 docker logs video-app-backend
-
-docker exec -it video-app-backend bash
