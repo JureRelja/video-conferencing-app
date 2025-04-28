@@ -240,7 +240,7 @@ export default function Home() {
         newElem.setAttribute('id', `td-${remoteProducerId}`);
 
         if (params.kind === 'audio') {
-          const audioElem = document.createElement('video');
+          const audioElem = document.createElement('audio');
           audioElem.setAttribute('id', remoteProducerId);
           audioElem.setAttribute('autoplay', '');
           newElem.appendChild(audioElem);
