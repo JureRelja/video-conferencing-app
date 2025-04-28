@@ -201,7 +201,11 @@ export class SocketService {
     socket.on('transport-connect', ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
       const transport = this.getTransport(socket.id);
       if (transport) {
-        transport.connect({ dtlsParameters });
+        try {
+          transport.connect({ dtlsParameters });
+        } catch (error) {
+          console.error('Error connecting transport:', error);
+        }
       }
     });
 
