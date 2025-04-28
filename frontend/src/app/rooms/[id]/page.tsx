@@ -38,7 +38,7 @@ const params = {
 export default function Home() {
   const { id } = useParams<{ id: string }>();
 
-  const deviceRef = useRef<Device | null>(null); // Ref to store the latest device state
+  const deviceRef = useRef<Device | null>(null);
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
@@ -85,7 +85,7 @@ export default function Home() {
       await newDevice.load({ routerRtpCapabilities: rtpCapabilitiesLocal });
       console.log('Device RTP Capabilities:', newDevice.rtpCapabilities);
 
-      deviceRef.current = newDevice; // Update the ref with the new device instance
+      deviceRef.current = newDevice;
       createSendTransport();
     } catch (error: any) {
       console.error('Error creating device:', error);
@@ -242,8 +242,8 @@ export default function Home() {
         if (params.kind === 'audio') {
           newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
-          newElem.setAttribute('className', 'w-[300px] h-[200px] object-cover relative aspect-video');
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay className="w-full h-full bg-black"></video>`;
+          newElem.setAttribute('className', 'max-w-[300px] max-h-[200px] object-contain relative bg-black');
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay className="w-full h-full object-contain bg-black"></video>`;
         }
 
         videoContainer.current.appendChild(newElem);
@@ -291,7 +291,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-        <div className="w-[300px] h-[200px] object-cover relative aspect-video">
+        <div className="max-w-[300px] max-h-[200px] object-contain relative bg-black">
           <video ref={localVideo} autoPlay muted className="w-full h-full object-contain bg-black"></video>
         </div>
       </div>
