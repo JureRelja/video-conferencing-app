@@ -116,7 +116,7 @@ sudo docker build --platform linux/amd64 -t video-app-backend .
 
 docker save -o video-app-backend.tar video-app-backend
 
-scp video-app-backend.tar root@146.190.28.111
+scp video-app-backend.tar root@146.190.28.111:/root
 
 docker load < /root/video-app-backend.tar
 
