@@ -8,8 +8,8 @@ dotenv.config();
 
 async function bootstrap() {
   const httpsOptions = {
-    key: readFileSync('ssl/key.pem'),
-    cert: readFileSync('ssl/cert.pem'),
+    key: readFileSync('/app/ssl/privkey1.pem'),
+    cert: readFileSync('/app/ssl/fullchain1.pem'),
   };
 
   const app = await NestFactory.create(AppModule, {
@@ -30,8 +30,8 @@ async function bootstrap() {
     credentials: false,
   });
 
-  await app.listen(3001);
+  await app.listen(process.env.PORT ?? 3001);
 
-  console.log(`Application is running on: port ${3001}`);
+  console.log(`Application is running on: port ${process.env.PORT ?? 3001}`);
 }
 void bootstrap();

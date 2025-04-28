@@ -54,7 +54,7 @@ export default function Home() {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: { width: { min: 640, max: 1920 }, height: { min: 400, max: 1080 } },
+        video: { width: { min: 300, max: 300 }, height: { min: 200, max: 200 } },
       })
       .then((stream) => {
         if (localVideo.current) {

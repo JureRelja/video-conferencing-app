@@ -123,8 +123,10 @@ scp video-app-backend.tar root@146.190.28.111:/root
 docker load < /root/video-app-backend.tar
 
 sudo docker run -d --name video-app-backend \
- -p 3001:3001 \
+ -p 80:80 \
  -p 2000-3000:2000-3000/udp \
+ -v /etc/letsencrypt/archive/video-chat-app.neatmerchant.com:/app/ssl \
+ -e PORT=80 \
  -e BACKEND_IP=146.190.28.111 \
  -e DEBUG="mediasoup\*" \
  video-app-backend
@@ -132,6 +134,7 @@ sudo docker run -d --name video-app-backend \
 docker run --platform linux/amd64 -d --name video-app-backend \
  -p 3001:3001 \
  -p 2000-3000:2000-3000/udp \
+ -e PORT=3001 \
  -e BACKEND_IP=127.0.0.1 \
  -e DEBUG="mediasoup\*" \
  video-app-backend
