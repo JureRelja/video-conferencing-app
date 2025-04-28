@@ -239,11 +239,18 @@ export default function Home() {
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
         newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
+
+        const audioElem = document.createElement('video');
+        audioElem.setAttribute('id', remoteProducerId);
+        audioElem.setAttribute('autoplay', '');
+
         const videoElem = document.createElement('video');
         videoElem.setAttribute('id', remoteProducerId);
         videoElem.setAttribute('autoplay', '');
         videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
+
         newElem.appendChild(videoElem);
+        newElem.appendChild(audioElem);
         videoContainer.current.appendChild(newElem);
 
         const { track } = consumer;
