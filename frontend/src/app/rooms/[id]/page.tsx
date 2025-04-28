@@ -242,8 +242,8 @@ export default function Home() {
         if (params.kind === 'audio') {
           newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
-          newElem.setAttribute('class', 'remoteVideo');
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" className="w-full max-w-[300px] h-auto object-cover"></video>`;
+          newElem.setAttribute('className', 'w-[300px] h-[200px] object-cover relative aspect-video');
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay className="w-full h-full bg-black"></video>`;
         }
 
         videoContainer.current.appendChild(newElem);
@@ -291,7 +291,9 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-        <video ref={localVideo} autoPlay muted width="300px" className="w-full max-w-[300px] h-auto object-cover"></video>
+        <div className="w-[300px] h-[200px] object-cover relative aspect-video">
+          <video ref={localVideo} autoPlay muted className="w-full h-full object-contain bg-black"></video>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 justify-center w-fit">
