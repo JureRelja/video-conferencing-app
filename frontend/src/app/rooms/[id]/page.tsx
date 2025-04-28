@@ -38,7 +38,7 @@ const params = {
 export default function Home() {
   const { id } = useParams<{ id: string }>();
 
-  const deviceRef = useRef<Device | null>(null); // Ref to store the latest device state
+  const deviceRef = useRef<Device | null>(null);
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
@@ -85,7 +85,7 @@ export default function Home() {
       await newDevice.load({ routerRtpCapabilities: rtpCapabilitiesLocal });
       console.log('Device RTP Capabilities:', newDevice.rtpCapabilities);
 
-      deviceRef.current = newDevice; // Update the ref with the new device instance
+      deviceRef.current = newDevice;
       createSendTransport();
     } catch (error: any) {
       console.error('Error creating device:', error);
@@ -240,10 +240,18 @@ export default function Home() {
         newElem.setAttribute('id', `td-${remoteProducerId}`);
 
         if (params.kind === 'audio') {
-          newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
+          const audioElem = document.createElement('video');
+          audioElem.setAttribute('id', remoteProducerId);
+          audioElem.setAttribute('autoplay', '');
+          newElem.appendChild(audioElem);
         } else {
-          newElem.setAttribute('class', 'remoteVideo');
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay width="300px" height="200px"></video>`;
+          newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
+
+          const videoElem = document.createElement('video');
+          videoElem.setAttribute('id', remoteProducerId);
+          videoElem.setAttribute('autoplay', '');
+          videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
+          newElem.appendChild(videoElem);
         }
 
         videoContainer.current.appendChild(newElem);
