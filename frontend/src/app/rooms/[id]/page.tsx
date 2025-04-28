@@ -238,14 +238,12 @@ export default function Home() {
 
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
-
-        if (params.kind === 'audio') {
-          newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
-        } else {
-          newElem.setAttribute('className', 'max-w-[300px] max-h-[200px] object-contain relative bg-black');
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay className="w-full h-full object-contain bg-black"></video>`;
-        }
-
+        newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
+        const videoElem = document.createElement('video');
+        videoElem.setAttribute('id', remoteProducerId);
+        videoElem.setAttribute('autoplay', '');
+        videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
+        newElem.appendChild(videoElem);
         videoContainer.current.appendChild(newElem);
 
         const { track } = consumer;
@@ -273,7 +271,7 @@ export default function Home() {
         consumerTransportData.consumer.close();
         consumerTransportsRef.current = consumerTransportsRef.current.filter((data) => data.producerId !== remoteProducerId);
 
-        const videoElement = document.getElementById(`td-${remoteProducerId}`);
+        const videoElement = videoContainer.current?.querySelector(`#td-${remoteProducerId}`);
         if (videoElement) {
           videoElement.remove();
         }
@@ -291,7 +289,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
       <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-        <div className="max-w-[300px] max-h-[200px] object-contain relative bg-black">
+        <div className="w-[300px] max-h-[200px] object-contain relative bg-black">
           <video ref={localVideo} autoPlay muted className="w-full h-full object-contain bg-black"></video>
         </div>
       </div>
