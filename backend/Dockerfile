@@ -1,29 +1,20 @@
-FROM ubuntu:20.04
+FROM ubuntu
 
-# Install required dependencies
+# Install DEB dependencies and others.
 RUN set -x \
   && apt-get update \
   && apt-get install -y \
+		pip \
     net-tools \
     build-essential \
     python3 \
     iputils-ping \
     iproute2 \
     curl \
-    python3-pip \
-    valgrind \
-    libstdc++6 \
-    libgcc1 \
-    libc6 \
-    libmicrohttpd12 \
-    libssl-dev \
-    libcurl4-openssl-dev \
-    libglib2.0-0 \
-  && rm -rf /var/lib/apt/lists/*
+    python3-pip
 
-# Install Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-  && apt-get install -y nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
 
 WORKDIR /
 
@@ -31,6 +22,13 @@ COPY package.json .
 RUN npm install
 COPY . .
 
+RUN rm -rf node_modules package-lock.json
+
+RUN npm install
+
 RUN npm run build
+
+EXPOSE 3001
+EXPOSE 2000-3000
 
 CMD ["npm", "run", "start:prod"]
