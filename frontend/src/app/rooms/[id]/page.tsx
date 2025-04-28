@@ -40,6 +40,8 @@ export default function Home() {
 
   const deviceRef = useRef<Device | null>(null);
   const videoContainer = useRef<HTMLDivElement | null>(null);
+  const audioContainer = useRef<HTMLDivElement | null>(null);
+
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
   const rtpCapabilitiesRef = useRef<any>(null);
@@ -234,7 +236,7 @@ export default function Home() {
           consumer,
         });
 
-        if (!videoContainer.current) return;
+        if (!videoContainer.current || !audioContainer.current) return;
 
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
@@ -244,6 +246,7 @@ export default function Home() {
           audioElem.setAttribute('id', remoteProducerId);
           audioElem.setAttribute('autoplay', '');
           newElem.appendChild(audioElem);
+          audioContainer.current.appendChild(newElem);
         } else {
           newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
 
@@ -252,9 +255,8 @@ export default function Home() {
           videoElem.setAttribute('autoplay', '');
           videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
           newElem.appendChild(videoElem);
+          videoContainer.current.appendChild(newElem);
         }
-
-        videoContainer.current.appendChild(newElem);
 
         const { track } = consumer;
         const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
@@ -297,22 +299,26 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-      <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-        <div className="w-[300px] max-h-[200px] object-contain relative bg-black">
-          <video ref={localVideo} autoPlay muted className="w-full h-full object-contain bg-black"></video>
+    <>
+      <div ref={audioContainer}></div>
+
+      <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
+        <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
+          <div className="w-[300px] max-h-[200px] object-contain relative bg-black">
+            <video ref={localVideo} autoPlay muted className="w-full h-full object-contain bg-black"></video>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 justify-center w-fit">
+          <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
+          <Button
+            onClick={() => {
+              navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
+            }}>
+            Kopiraj link
+          </Button>
         </div>
       </div>
-
-      <div className="flex items-center gap-2 justify-center w-fit">
-        <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
-        <Button
-          onClick={() => {
-            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
-          }}>
-          Kopiraj link
-        </Button>
-      </div>
-    </div>
+    </>
   );
 }
