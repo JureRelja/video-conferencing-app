@@ -91,7 +91,12 @@ export class SocketService {
     console.log('Client connected', clientId);
 
     if (!this.worker) {
-      this.createWorker();
+      try {
+        this.createWorker();
+      } catch (error) {
+        console.error('Error creating worker:', error);
+        return;
+      }
     }
 
     socket.emit('connection-success', {
@@ -333,18 +338,25 @@ export class SocketService {
   }
 
   async createWorker(): Promise<Worker<AppData>> {
-    this.worker = await mediasoup.createWorker({
-      rtcMinPort: 2000,
-      rtcMaxPort: 2900,
-    });
-    console.log(`worker pid ${this.worker.pid}`);
+    try {
+      this.worker = await mediasoup.createWorker({
+        rtcMinPort: 2000,
+        rtcMaxPort: 3000,
+        logLevel: 'debug', // Add this for more detailed logs
+        logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp'],
+      });
+      console.log(`worker pid ${this.worker.pid}`);
 
-    this.worker.on('died', () => {
-      console.error('mediasoup worker has died');
-      setTimeout(() => process.exit(1), 2000);
-    });
+      this.worker.on('died', () => {
+        console.error('mediasoup worker has died');
+        setTimeout(() => process.exit(1), 2000);
+      });
 
-    return this.worker;
+      return this.worker;
+    } catch (error) {
+      console.error('Error creating worker:', error);
+      throw error;
+    }
   }
 
   async createRoom(roomName: string, socketId: string): Promise<Router> {

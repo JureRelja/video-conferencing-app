@@ -125,8 +125,19 @@ sudo docker run -d --name video-app-backend \
  -p 2000-3000:2000-3000/udp \
  -e PORT=3001 \
  -e BACKEND_IP=146.190.28.111 \
+ -e DEBUG="mediasoup\*" \
+ video-app-backend
+
+docker run --platform linux/amd64 -d --name video-app-backend \
+ -p 3001:3001 \
+ -p 2000-3000:2000-3000/udp \
+ -e PORT=3001 \
+ -e BACKEND_IP=127.0.0.1 \
+ -e DEBUG="mediasoup\*" \
  video-app-backend
 
 sudo docker start video-app-backend
 
-146.190.28.111:3001
+docker remove video-app-backend && docker image rm video-app-backend
+
+docker logs video-app-backend
