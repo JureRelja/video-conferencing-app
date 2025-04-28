@@ -239,12 +239,12 @@ export default function Home() {
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
 
-        newElem.setAttribute('class', 'w-[300px] max-h-[200px] object-contain relative bg-black');
+        newElem.setAttribute('class', 'w-[300px] max-h-[200px] object-contain relative');
 
         if (params.kind === 'audio') {
           newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
-          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay class="w-full h-full object-contain bg-black"></video>`;
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay class="w-full h-full object-contain"></video>`;
         }
 
         videoContainer.current.appendChild(newElem);
