@@ -240,17 +240,19 @@ export default function Home() {
         newElem.setAttribute('id', `td-${remoteProducerId}`);
         newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
 
-        const audioElem = document.createElement('video');
-        audioElem.setAttribute('id', remoteProducerId);
-        audioElem.setAttribute('autoplay', '');
+        if (params.kind === 'audio') {
+          const audioElem = document.createElement('video');
+          audioElem.setAttribute('id', remoteProducerId);
+          audioElem.setAttribute('autoplay', '');
+          newElem.appendChild(audioElem);
+        } else {
+          const videoElem = document.createElement('video');
+          videoElem.setAttribute('id', remoteProducerId);
+          videoElem.setAttribute('autoplay', '');
+          videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
+          newElem.appendChild(videoElem);
+        }
 
-        const videoElem = document.createElement('video');
-        videoElem.setAttribute('id', remoteProducerId);
-        videoElem.setAttribute('autoplay', '');
-        videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
-
-        newElem.appendChild(videoElem);
-        newElem.appendChild(audioElem);
         videoContainer.current.appendChild(newElem);
 
         const { track } = consumer;
@@ -278,7 +280,7 @@ export default function Home() {
         consumerTransportData.consumer.close();
         consumerTransportsRef.current = consumerTransportsRef.current.filter((data) => data.producerId !== remoteProducerId);
 
-        const videoElement = videoContainer.current?.querySelector(`#td-${remoteProducerId}`);
+        const videoElement = document.getElementById(`td-${remoteProducerId}`);
         if (videoElement) {
           videoElement.remove();
         }
