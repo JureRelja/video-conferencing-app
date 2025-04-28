@@ -238,19 +238,13 @@ export default function Home() {
 
         const newElem = document.createElement('div');
         newElem.setAttribute('id', `td-${remoteProducerId}`);
-        newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
+
+        newElem.setAttribute('class', 'w-[300px] max-h-[200px] object-contain relative bg-black');
 
         if (params.kind === 'audio') {
-          const audioElem = document.createElement('video');
-          audioElem.setAttribute('id', remoteProducerId);
-          audioElem.setAttribute('autoplay', '');
-          newElem.appendChild(audioElem);
+          newElem.innerHTML = `<audio id="${remoteProducerId}" autoplay></audio>`;
         } else {
-          const videoElem = document.createElement('video');
-          videoElem.setAttribute('id', remoteProducerId);
-          videoElem.setAttribute('autoplay', '');
-          videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
-          newElem.appendChild(videoElem);
+          newElem.innerHTML = `<video id="${remoteProducerId}" autoplay class="w-full h-full object-contain bg-black"></video>`;
         }
 
         videoContainer.current.appendChild(newElem);
