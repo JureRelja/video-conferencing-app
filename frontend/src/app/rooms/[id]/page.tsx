@@ -253,6 +253,7 @@ export default function Home() {
           const videoElem = document.createElement('video');
           videoElem.setAttribute('id', remoteProducerId);
           videoElem.setAttribute('autoplay', '');
+          videoElem.setAttribute('playsinline', '');
           videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
           newElem.appendChild(videoElem);
           videoContainer.current.appendChild(newElem);
@@ -305,7 +306,7 @@ export default function Home() {
       <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
         <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
           <div className="w-[300px] max-h-[200px] object-contain relative bg-black">
-            <video ref={localVideo} autoPlay muted className="w-full h-full object-contain bg-black"></video>
+            <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
           </div>
         </div>
 
