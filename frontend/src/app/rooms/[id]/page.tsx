@@ -320,7 +320,6 @@ export default function Home() {
           const audioElem = document.createElement('audio');
           audioElem.setAttribute('id', remoteProducerId);
           audioElem.setAttribute('autoplay', 'true');
-          audioElem.setAttribute('controls', 'true');
           audioElem.muted = false; // Don't mute remote audio - users want to hear other participants
           newElem.appendChild(audioElem);
           audioContainer.current.appendChild(newElem);
@@ -332,7 +331,6 @@ export default function Home() {
           videoElem.setAttribute('id', remoteProducerId);
           videoElem.setAttribute('autoplay', 'true');
           videoElem.setAttribute('playsinline', 'true');
-          videoElem.setAttribute('controls', 'true');
           videoElem.muted = false; // Don't mute remote video - let users control volume
           videoElem.className = 'w-full h-full object-contain bg-black';
 
