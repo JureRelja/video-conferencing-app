@@ -53,6 +53,12 @@ export default function Home() {
   const videoParamsRef = useRef<any>({ params });
 
   const getLocalStream = () => {
+    // Check if mediaDevices is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('getUserMedia not supported on this browser');
+      return;
+    }
+
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
@@ -63,13 +69,41 @@ export default function Home() {
           localVideo.current.srcObject = stream;
         }
 
-        audioParamsRef.current = { track: stream.getAudioTracks()[0], ...audioParamsRef.current };
-        videoParamsRef.current = { track: stream.getVideoTracks()[0], ...videoParamsRef.current };
+        // Check if tracks are available
+        const audioTracks = stream.getAudioTracks();
+        const videoTracks = stream.getVideoTracks();
+
+        if (audioTracks.length > 0) {
+          audioParamsRef.current = { track: audioTracks[0], ...audioParamsRef.current };
+        } else {
+          console.warn('No audio track available');
+        }
+
+        if (videoTracks.length > 0) {
+          videoParamsRef.current = { track: videoTracks[0], ...videoParamsRef.current };
+        } else {
+          console.warn('No video track available');
+        }
 
         joinRoom();
       })
-      .catch(() => {
-        console.error('Error accessing media devices:');
+      .catch((error) => {
+        console.error('Error accessing media devices:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+
+        // Handle specific error types
+        if (error.name === 'NotAllowedError') {
+          console.error('Permission denied. Please allow camera and microphone access.');
+        } else if (error.name === 'NotFoundError') {
+          console.error('No camera or microphone found.');
+        } else if (error.name === 'NotReadableError') {
+          console.error('Camera or microphone is already in use.');
+        } else if (error.name === 'OverconstrainedError') {
+          console.error('Camera constraints cannot be satisfied.');
+        } else if (error.name === 'SecurityError') {
+          console.error('Security error. Make sure you are using HTTPS.');
+        }
       });
   };
 
@@ -244,21 +278,17 @@ export default function Home() {
         if (params.kind === 'audio') {
           const audioElem = document.createElement('audio');
           audioElem.setAttribute('id', remoteProducerId);
-          audioElem.setAttribute('autoplay', 'true');
-          audioElem.setAttribute('controls', 'true');
-          audioElem.muted = true; // Mute by default for autoplay in Firefox
+          audioElem.setAttribute('autoplay', '');
           newElem.appendChild(audioElem);
           audioContainer.current.appendChild(newElem);
         } else {
-          newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black';
+          newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
 
           const videoElem = document.createElement('video');
           videoElem.setAttribute('id', remoteProducerId);
-          videoElem.setAttribute('autoplay', 'true');
-          videoElem.setAttribute('playsinline', 'true');
-          videoElem.setAttribute('controls', 'true');
-          videoElem.muted = true; // Mute by default for autoplay in Firefox
-          videoElem.className = 'w-full h-full object-contain bg-black';
+          videoElem.setAttribute('autoplay', '');
+          videoElem.setAttribute('playsinline', '');
+          videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
           newElem.appendChild(videoElem);
           videoContainer.current.appendChild(newElem);
         }
@@ -267,11 +297,6 @@ export default function Home() {
         const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
         if (mediaElement) {
           mediaElement.srcObject = new MediaStream([track]);
-
-          // Explicitly try to play for Firefox compatibility
-          mediaElement.play().catch((error) => {
-            console.log('Autoplay prevented, user interaction required:', error);
-          });
         }
 
         socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId });
