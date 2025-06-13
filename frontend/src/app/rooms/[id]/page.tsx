@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,8 @@ export default function Home() {
   const [mutedParticipants, setMutedParticipants] = useState<Set<string>>(new Set());
 
   const deviceRef = useRef<Device | null>(null);
-  const videoContainer = useRef<HTMLDivElement | null>(null);
+  const gridContainer = useRef<HTMLDivElement | null>(null);
+  const thumbnailContainer = useRef<HTMLDivElement | null>(null);
   const audioContainer = useRef<HTMLDivElement | null>(null);
 
   const localVideo = useRef<HTMLVideoElement | null>(null);
@@ -61,66 +63,66 @@ export default function Home() {
   const toggleFullscreen = (videoId: string) => {
     const newFullscreenVideo = fullscreenVideo === videoId ? null : videoId;
     setFullscreenVideo(newFullscreenVideo);
+  };
 
-    // Reorganize layout after state change
-    setTimeout(() => reorganizeLayout(newFullscreenVideo), 10);
-  }; // Function to reorganize video layout based on fullscreen state
-  const reorganizeLayout = (currentFullscreenVideo: string | null) => {
-    if (!videoContainer.current) return;
+  // Create video element for both grid and thumbnail containers
+  const createVideoElement = (participantId: string, track: MediaStreamTrack, container: HTMLDivElement, isGrid: boolean = true) => {
+    const newElem = document.createElement('div');
+    const containerId = isGrid ? 'grid' : 'thumbnail';
+    newElem.setAttribute('id', `${containerId}-${participantId}`);
 
-    const allVideoElements = videoContainer.current.querySelectorAll('[id^="td-"]');
+    if (isGrid) {
+      newElem.className = 'w-[530px] max-h-[400px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all';
+    } else {
+      newElem.className =
+        'w-full aspect-video bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative rounded';
+    }
 
-    allVideoElements.forEach((element) => {
-      const htmlElement = element as HTMLElement;
-      const videoElement = htmlElement.querySelector('video');
-      const muteButton = htmlElement.querySelector('button');
-      const participantId = htmlElement.id.replace('td-', '');
+    const videoElem = document.createElement('video');
+    videoElem.setAttribute('id', `${containerId}-video-${participantId}`);
+    videoElem.setAttribute('autoplay', 'true');
+    videoElem.setAttribute('playsinline', 'true');
+    videoElem.muted = mutedParticipants.has(participantId);
+    videoElem.className = isGrid ? 'w-full h-full object-contain bg-black' : 'w-full h-full object-cover bg-black';
+    videoElem.srcObject = new MediaStream([track]);
 
-      if (currentFullscreenVideo && !htmlElement.id.includes(currentFullscreenVideo)) {
-        // Thumbnail mode - smaller size, stacked vertically
-        htmlElement.className =
-          'w-full aspect-video bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative rounded';
-        if (videoElement) {
-          videoElement.className = 'w-full h-full object-cover bg-black';
-        }
-        if (muteButton) {
-          muteButton.className = 'absolute top-1 right-1 bg-black bg-opacity-70 text-white p-1 rounded-full hover:bg-opacity-90 transition-all z-10';
-          const isMuted = mutedParticipants.has(participantId);
-          muteButton.innerHTML = isMuted
-            ? `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-            </svg>
-          `
-            : `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-            </svg>
-          `;
-        }
-      } else if (!currentFullscreenVideo) {
-        // Grid mode - larger size, flex layout
-        htmlElement.className =
-          'w-[530px] max-h-[400px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all';
-        if (videoElement) {
-          videoElement.className = 'w-full h-full object-contain bg-black';
-        }
-        if (muteButton) {
-          muteButton.className = 'absolute top-2 right-2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all z-10';
-          const isMuted = mutedParticipants.has(participantId);
-          muteButton.innerHTML = isMuted
-            ? `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-            </svg>
-          `
-            : `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-          `;
-        }
-      }
+    // Create mute button overlay
+    const muteButton = document.createElement('button');
+    muteButton.setAttribute('id', `mute-btn-${containerId}-${participantId}`);
+    muteButton.className = isGrid
+      ? 'absolute top-2 right-2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all z-10'
+      : 'absolute top-1 right-1 bg-black bg-opacity-70 text-white p-1 rounded-full hover:bg-opacity-90 transition-all z-10';
+
+    const updateMuteButton = () => {
+      const isMuted = mutedParticipants.has(participantId);
+      const iconSize = isGrid ? '20' : '16';
+      muteButton.innerHTML = isMuted
+        ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
+             <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+           </svg>`
+        : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
+             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+           </svg>`;
+    };
+
+    updateMuteButton();
+
+    // Add click handler for mute toggle
+    muteButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleParticipantMute(participantId);
+    });
+
+    // Add click handler for fullscreen toggle
+    newElem.addEventListener('click', () => toggleFullscreen(participantId));
+
+    newElem.appendChild(videoElem);
+    newElem.appendChild(muteButton);
+    container.appendChild(newElem);
+
+    // Try to play video
+    videoElem.play().catch((error) => {
+      console.log('Autoplay prevented, user interaction required:', error);
     });
   };
 
@@ -138,34 +140,36 @@ export default function Home() {
     }
     setMutedParticipants(newMutedParticipants);
 
-    // Apply mute state to the media element
-    const mediaElement = document.getElementById(participantId) as HTMLMediaElement;
-    if (mediaElement) {
-      mediaElement.muted = newMutedParticipants.has(participantId);
-    }
+    const isMuted = newMutedParticipants.has(participantId);
 
-    // Also apply to fullscreen element if it exists
-    const fullscreenElement = document.getElementById(`fullscreen-${participantId}`) as HTMLMediaElement;
-    if (fullscreenElement) {
-      fullscreenElement.muted = newMutedParticipants.has(participantId);
-    }
+    // Apply mute state to all video elements for this participant
+    const gridVideo = document.getElementById(`grid-video-${participantId}`) as HTMLVideoElement | null;
+    const thumbnailVideo = document.getElementById(`thumbnail-video-${participantId}`) as HTMLVideoElement | null;
+    const fullscreenVideo = document.getElementById(`fullscreen-${participantId}`) as HTMLVideoElement | null;
 
-    // Update mute button appearance
-    const muteButton = document.getElementById(`mute-btn-${participantId}`) as HTMLButtonElement;
-    if (muteButton) {
-      const isMuted = newMutedParticipants.has(participantId);
-      muteButton.innerHTML = isMuted
-        ? `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-        </svg>
-      `
-        : `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-        </svg>
-      `;
-    }
+    [gridVideo, thumbnailVideo, fullscreenVideo].forEach((video) => {
+      if (video) {
+        video.muted = isMuted;
+      }
+    });
+
+    // Update all mute buttons for this participant
+    const gridMuteBtn = document.getElementById(`mute-btn-grid-${participantId}`) as HTMLButtonElement | null;
+    const thumbnailMuteBtn = document.getElementById(`mute-btn-thumbnail-${participantId}`) as HTMLButtonElement | null;
+
+    [gridMuteBtn, thumbnailMuteBtn].forEach((btn) => {
+      if (btn) {
+        const isGrid = btn.id.includes('grid');
+        const iconSize = isGrid ? '20' : '16';
+        btn.innerHTML = isMuted
+          ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+             </svg>`
+          : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+             </svg>`;
+      }
+    });
   };
 
   const getLocalStream = () => {
@@ -231,7 +235,7 @@ export default function Home() {
     socket.emit('joinRoom', { roomName: id }, (data: { rtpCapabilities: any }) => {
       console.log(`Router RTP Capabilities: ${data.rtpCapabilities}`);
       rtpCapabilitiesRef.current = data.rtpCapabilities;
-      createDevice(data.rtpCapabilities);
+      void createDevice(data.rtpCapabilities);
     });
   };
 
@@ -289,7 +293,7 @@ export default function Home() {
         }
       });
 
-      connectSendTransport();
+      void connectSendTransport();
     });
   };
 
@@ -390,12 +394,12 @@ export default function Home() {
           consumer,
         });
 
-        if (!videoContainer.current || !audioContainer.current) return;
-
-        const newElem = document.createElement('div');
-        newElem.setAttribute('id', `td-${remoteProducerId}`);
+        if (!gridContainer.current || !audioContainer.current) return;
 
         if (params.kind === 'audio') {
+          const newElem = document.createElement('div');
+          newElem.setAttribute('id', `audio-${remoteProducerId}`);
+
           const audioElem = document.createElement('audio');
           audioElem.setAttribute('id', remoteProducerId);
           audioElem.setAttribute('autoplay', 'true');
@@ -403,68 +407,33 @@ export default function Home() {
           newElem.appendChild(audioElem);
           audioContainer.current.appendChild(newElem);
         } else {
-          newElem.className =
-            'w-[530px] max-h-[400px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all';
+          const { track } = consumer;
 
-          const videoElem = document.createElement('video');
-          videoElem.setAttribute('id', remoteProducerId);
-          videoElem.setAttribute('autoplay', 'true');
-          videoElem.setAttribute('playsinline', 'true');
-          videoElem.muted = false; // Don't mute remote video - let users control volume
-          videoElem.className = 'w-full h-full object-contain bg-black';
+          // Create video element in grid container
+          if (gridContainer.current) {
+            createVideoElement(remoteProducerId, track, gridContainer.current, true);
+          }
 
-          // Create mute button overlay
-          const muteButton = document.createElement('button');
-          muteButton.setAttribute('id', `mute-btn-${remoteProducerId}`);
-          muteButton.className = 'absolute top-2 right-2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all z-10';
-
-          // Set initial mute button appearance
-          const updateMuteButton = () => {
-            const isMuted = mutedParticipants.has(remoteProducerId);
-            muteButton.innerHTML = isMuted
-              ? `
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-              </svg>
-            `
-              : `
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-              </svg>
-            `;
-          };
-
-          updateMuteButton();
-
-          // Add click handler for mute toggle (prevent event bubbling to avoid fullscreen toggle)
-          muteButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            toggleParticipantMute(remoteProducerId);
-          });
-
-          // Add click handler for fullscreen toggle
-          newElem.addEventListener('click', () => toggleFullscreen(remoteProducerId));
-
-          newElem.appendChild(videoElem);
-          newElem.appendChild(muteButton);
-          videoContainer.current.appendChild(newElem);
-
-          // Apply current layout styling
-          setTimeout(() => reorganizeLayout(fullscreenVideo), 10);
+          // Create video element in thumbnail container
+          if (thumbnailContainer.current) {
+            createVideoElement(remoteProducerId, track, thumbnailContainer.current, false);
+          }
         }
 
         const { track } = consumer;
-        const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
-        if (mediaElement) {
-          mediaElement.srcObject = new MediaStream([track]);
 
-          // Explicitly try to play for Firefox compatibility
-          mediaElement.play().catch((error) => {
-            console.log('Autoplay prevented, user interaction required:', error);
-          });
+        // Set up audio element
+        if (params.kind === 'audio') {
+          const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
+          if (mediaElement) {
+            mediaElement.srcObject = new MediaStream([track]);
+            mediaElement.play().catch((error) => {
+              console.log('Autoplay prevented, user interaction required:', error);
+            });
+          }
         }
 
-        // Also set up fullscreen video source if this is the fullscreen video
+        // Set up fullscreen video source if this is the fullscreen video
         const fullscreenElement = document.getElementById(`fullscreen-${remoteProducerId}`) as HTMLMediaElement;
         if (fullscreenElement) {
           fullscreenElement.srcObject = new MediaStream([track]);
@@ -492,10 +461,14 @@ export default function Home() {
         consumerTransportData.consumer.close();
         consumerTransportsRef.current = consumerTransportsRef.current.filter((data) => data.producerId !== remoteProducerId);
 
-        const videoElement = document.getElementById(`td-${remoteProducerId}`);
-        if (videoElement) {
-          videoElement.remove();
-        }
+        // Remove elements from both containers
+        const gridElement = document.getElementById(`grid-${remoteProducerId}`);
+        const thumbnailElement = document.getElementById(`thumbnail-${remoteProducerId}`);
+        const audioElement = document.getElementById(`audio-${remoteProducerId}`);
+
+        if (gridElement) gridElement.remove();
+        if (thumbnailElement) thumbnailElement.remove();
+        if (audioElement) audioElement.remove();
       }
     });
 
@@ -562,14 +535,14 @@ export default function Home() {
               )}
 
               {/* Container for other video thumbnails - they'll be inserted here */}
-              <div ref={videoContainer} className="flex flex-col gap-3">
+              <div ref={thumbnailContainer} className="flex flex-col gap-3">
                 {/* Remote videos will be inserted here with smaller dimensions */}
               </div>
             </div>
           </div>
         ) : (
           // Grid layout (default view)
-          <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
+          <div className="flex flex-wrap gap-4 justify-center w-full" ref={gridContainer}>
             <div
               className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
               onClick={() => toggleFullscreen('local')}>
@@ -582,7 +555,7 @@ export default function Home() {
           <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
           <Button
             onClick={() => {
-              navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
+              void navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
             }}>
             Kopiraj link
           </Button>
