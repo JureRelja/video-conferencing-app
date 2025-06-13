@@ -73,11 +73,21 @@ export default function Home() {
         thumbnailContainer.current.style.display = 'flex';
         thumbnailContainer.current.style.flexDirection = 'column';
         thumbnailContainer.current.style.width = '30%';
+
+        // Ensure all videos are visible in the thumbnail container
+        Array.from(thumbnailContainer.current.children).forEach((child) => {
+          (child as HTMLElement).style.display = 'block';
+        });
       }
     } else {
       // Reset layout to grid mode
       if (gridContainer.current) {
         gridContainer.current.style.display = 'flex';
+
+        // Ensure all videos are visible in the grid container
+        Array.from(gridContainer.current.children).forEach((child) => {
+          (child as HTMLElement).style.display = 'block';
+        });
       }
       if (thumbnailContainer.current) {
         thumbnailContainer.current.style.display = 'none';
