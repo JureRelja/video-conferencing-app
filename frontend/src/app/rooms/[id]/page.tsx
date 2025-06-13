@@ -6,7 +6,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Device } from 'mediasoup-client';
 import * as mediasoup from 'mediasoup-client';
 import socket from '@/socket/socket-io';
@@ -38,6 +38,11 @@ const params = {
 export default function Home() {
   const { id } = useParams<{ id: string }>();
 
+  // State for fullscreen video
+  const [fullscreenVideo, setFullscreenVideo] = useState<string | null>(null);
+  // State for muted participants
+  const [mutedParticipants, setMutedParticipants] = useState<Set<string>>(new Set());
+
   const deviceRef = useRef<Device | null>(null);
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const audioContainer = useRef<HTMLDivElement | null>(null);
@@ -52,6 +57,38 @@ export default function Home() {
   const audioParamsRef = useRef<any>(null);
   const videoParamsRef = useRef<any>({ params });
 
+  // Handle fullscreen video toggle
+  const toggleFullscreen = (videoId: string) => {
+    setFullscreenVideo(fullscreenVideo === videoId ? null : videoId);
+  };
+
+  // Handle participant mute toggle
+  const toggleParticipantMute = (participantId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation(); // Prevent fullscreen toggle when clicking mute button
+    }
+
+    const newMutedParticipants = new Set(mutedParticipants);
+    if (mutedParticipants.has(participantId)) {
+      newMutedParticipants.delete(participantId);
+    } else {
+      newMutedParticipants.add(participantId);
+    }
+    setMutedParticipants(newMutedParticipants);
+
+    // Apply mute state to the media element
+    const mediaElement = document.getElementById(participantId) as HTMLMediaElement;
+    if (mediaElement) {
+      mediaElement.muted = newMutedParticipants.has(participantId);
+    }
+
+    // Also apply to fullscreen element if it exists
+    const fullscreenElement = document.getElementById(`fullscreen-${participantId}`) as HTMLMediaElement;
+    if (fullscreenElement) {
+      fullscreenElement.muted = newMutedParticipants.has(participantId);
+    }
+  };
+
   const getLocalStream = () => {
     // Check if mediaDevices is available
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -63,7 +100,7 @@ export default function Home() {
       .getUserMedia({
         audio: true,
         video: {
-          width: { ideal: 400 },
+          width: { ideal: 530 },
           height: { ideal: 300 },
           facingMode: 'user',
         },
@@ -282,18 +319,73 @@ export default function Home() {
         if (params.kind === 'audio') {
           const audioElem = document.createElement('audio');
           audioElem.setAttribute('id', remoteProducerId);
-          audioElem.setAttribute('autoplay', '');
+          audioElem.setAttribute('autoplay', 'true');
+          audioElem.setAttribute('controls', 'true');
+          audioElem.muted = false; // Don't mute remote audio - users want to hear other participants
           newElem.appendChild(audioElem);
           audioContainer.current.appendChild(newElem);
         } else {
-          newElem.className = 'w-[400px] max-h-[300px] object-contain relative bg-black'; // Apply class directly here
+          newElem.className =
+            'w-[530px] max-h-[400px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all';
 
           const videoElem = document.createElement('video');
           videoElem.setAttribute('id', remoteProducerId);
-          videoElem.setAttribute('autoplay', '');
-          videoElem.setAttribute('playsinline', '');
-          videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
+          videoElem.setAttribute('autoplay', 'true');
+          videoElem.setAttribute('playsinline', 'true');
+          videoElem.setAttribute('controls', 'true');
+          videoElem.muted = false; // Don't mute remote video - let users control volume
+          videoElem.className = 'w-full h-full object-contain bg-black';
+
+          // Create mute button overlay
+          const muteButton = document.createElement('button');
+          muteButton.className = 'absolute top-2 right-2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all z-10';
+          muteButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          `;
+
+          // Add click handler for mute toggle (prevent event bubbling to avoid fullscreen toggle)
+          muteButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleParticipantMute(remoteProducerId);
+
+            // Update button appearance based on mute state
+            const isMuted = mutedParticipants.has(remoteProducerId);
+            muteButton.innerHTML = isMuted
+              ? `
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+              </svg>
+            `
+              : `
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+              </svg>
+            `;
+          });
+
+          // Add click handler for fullscreen toggle
+          newElem.addEventListener('click', () => toggleFullscreen(remoteProducerId));
+
+          // Adjust styling based on fullscreen state
+          if (fullscreenVideo && fullscreenVideo !== remoteProducerId) {
+            // Thumbnail view in sidebar
+            newElem.className =
+              'w-full aspect-video bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative';
+            videoElem.className = 'w-full h-full object-cover bg-black';
+            // Smaller mute button for thumbnails
+            muteButton.className =
+              'absolute top-1 right-1 bg-black bg-opacity-70 text-white p-1 rounded-full hover:bg-opacity-90 transition-all z-10';
+            muteButton.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+              </svg>
+            `;
+          }
+
           newElem.appendChild(videoElem);
+          newElem.appendChild(muteButton);
           videoContainer.current.appendChild(newElem);
         }
 
@@ -301,6 +393,20 @@ export default function Home() {
         const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
         if (mediaElement) {
           mediaElement.srcObject = new MediaStream([track]);
+
+          // Explicitly try to play for Firefox compatibility
+          mediaElement.play().catch((error) => {
+            console.log('Autoplay prevented, user interaction required:', error);
+          });
+        }
+
+        // Also set up fullscreen video source if this is the fullscreen video
+        const fullscreenElement = document.getElementById(`fullscreen-${remoteProducerId}`) as HTMLMediaElement;
+        if (fullscreenElement) {
+          fullscreenElement.srcObject = new MediaStream([track]);
+          fullscreenElement.play().catch((error) => {
+            console.log('Fullscreen autoplay prevented:', error);
+          });
         }
 
         socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId });
@@ -342,11 +448,71 @@ export default function Home() {
       <div ref={audioContainer}></div>
 
       <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-        <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-          <div className="w-[400px] max-h-[300px] object-contain relative bg-black">
-            <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
+        {fullscreenVideo ? (
+          // Fullscreen layout with main video and sidebar
+          <div className="flex gap-4 w-full h-[80vh]">
+            {/* Main fullscreen video */}
+            <div className="flex-1 relative bg-black rounded-lg overflow-hidden">
+              <video
+                ref={fullscreenVideo === 'local' ? localVideo : undefined}
+                id={fullscreenVideo === 'local' ? 'local-video' : `fullscreen-${fullscreenVideo}`}
+                className="w-full h-full object-contain"
+                onClick={() => setFullscreenVideo(null)}
+                style={{ cursor: 'pointer' }}
+                autoPlay
+                playsInline
+                muted={fullscreenVideo === 'local' || (fullscreenVideo !== null && mutedParticipants.has(fullscreenVideo))}
+              />
+              <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">Click to exit fullscreen</div>
+              {/* Mute button for fullscreen video (only for remote participants) */}
+              {fullscreenVideo && fullscreenVideo !== 'local' && (
+                <button
+                  className="absolute top-4 left-4 bg-black bg-opacity-70 text-white p-3 rounded-full hover:bg-opacity-90 transition-all z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleParticipantMute(fullscreenVideo);
+                  }}>
+                  {mutedParticipants.has(fullscreenVideo) ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                    </svg>
+                  ) : (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Sidebar with other videos */}
+            <div className="w-48 flex flex-col gap-2 overflow-y-auto">
+              {/* Local video thumbnail (if not fullscreen) */}
+              {fullscreenVideo !== 'local' && (
+                <div
+                  className="w-full aspect-video bg-black rounded cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative"
+                  onClick={() => toggleFullscreen('local')}>
+                  <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-cover" />
+                  {/* Local video is always muted to prevent feedback, so no mute button needed */}
+                </div>
+              )}
+
+              {/* Other video thumbnails */}
+              <div ref={videoContainer} className="flex flex-col gap-2">
+                {/* Remote videos will be inserted here with smaller dimensions */}
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          // Grid layout (default view)
+          <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
+            <div
+              className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+              onClick={() => toggleFullscreen('local')}>
+              <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 justify-center w-fit">
           <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
