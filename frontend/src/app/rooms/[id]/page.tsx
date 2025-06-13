@@ -87,6 +87,23 @@ export default function Home() {
     if (fullscreenElement) {
       fullscreenElement.muted = newMutedParticipants.has(participantId);
     }
+
+    // Update mute button appearance
+    const muteButton = document.getElementById(`mute-btn-${participantId}`) as HTMLButtonElement;
+    if (muteButton) {
+      const isMuted = newMutedParticipants.has(participantId);
+      muteButton.innerHTML = isMuted
+        ? `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+        </svg>
+      `
+        : `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+      `;
+    }
   };
 
   const getLocalStream = () => {
@@ -336,19 +353,11 @@ export default function Home() {
 
           // Create mute button overlay
           const muteButton = document.createElement('button');
+          muteButton.setAttribute('id', `mute-btn-${remoteProducerId}`);
           muteButton.className = 'absolute top-2 right-2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all z-10';
-          muteButton.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-          `;
 
-          // Add click handler for mute toggle (prevent event bubbling to avoid fullscreen toggle)
-          muteButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            toggleParticipantMute(remoteProducerId);
-
-            // Update button appearance based on mute state
+          // Set initial mute button appearance
+          const updateMuteButton = () => {
             const isMuted = mutedParticipants.has(remoteProducerId);
             muteButton.innerHTML = isMuted
               ? `
@@ -361,6 +370,14 @@ export default function Home() {
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
               </svg>
             `;
+          };
+
+          updateMuteButton();
+
+          // Add click handler for mute toggle (prevent event bubbling to avoid fullscreen toggle)
+          muteButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleParticipantMute(remoteProducerId);
           });
 
           // Add click handler for fullscreen toggle
@@ -368,9 +385,9 @@ export default function Home() {
 
           // Adjust styling based on fullscreen state
           if (fullscreenVideo && fullscreenVideo !== remoteProducerId) {
-            // Thumbnail view in sidebar
+            // Thumbnail view in sidebar - Google Meet style
             newElem.className =
-              'w-full aspect-video bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative';
+              'w-full aspect-video bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative rounded';
             videoElem.className = 'w-full h-full object-cover bg-black';
             // Smaller mute button for thumbnails
             muteButton.className =
@@ -449,8 +466,8 @@ export default function Home() {
         {fullscreenVideo ? (
           // Fullscreen layout with main video and sidebar
           <div className="flex gap-4 w-full h-[80vh]">
-            {/* Main fullscreen video */}
-            <div className="flex-1 relative bg-black rounded-lg overflow-hidden">
+            {/* Main video area - 70% width */}
+            <div className="flex-[0.7] relative bg-black rounded-lg overflow-hidden">
               <video
                 ref={fullscreenVideo === 'local' ? localVideo : undefined}
                 id={fullscreenVideo === 'local' ? 'local-video' : `fullscreen-${fullscreenVideo}`}
@@ -483,8 +500,8 @@ export default function Home() {
               )}
             </div>
 
-            {/* Sidebar with other videos */}
-            <div className="w-48 flex flex-col gap-2 overflow-y-auto">
+            {/* Sidebar with thumbnails - 30% width, stacked vertically */}
+            <div className="flex-[0.3] flex flex-col gap-3 overflow-y-auto">
               {/* Local video thumbnail (if not fullscreen) */}
               {fullscreenVideo !== 'local' && (
                 <div
@@ -495,8 +512,8 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Other video thumbnails */}
-              <div ref={videoContainer} className="flex flex-col gap-2">
+              {/* Container for other video thumbnails - they'll be inserted here */}
+              <div ref={videoContainer} className="flex flex-col gap-3">
                 {/* Remote videos will be inserted here with smaller dimensions */}
               </div>
             </div>
