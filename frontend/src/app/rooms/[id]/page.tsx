@@ -63,8 +63,8 @@ export default function Home() {
       .getUserMedia({
         audio: true,
         video: {
-          width: { ideal: 300 },
-          height: { ideal: 200 },
+          width: { ideal: 400 },
+          height: { ideal: 300 },
           facingMode: 'user',
         },
       })
@@ -286,7 +286,7 @@ export default function Home() {
           newElem.appendChild(audioElem);
           audioContainer.current.appendChild(newElem);
         } else {
-          newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
+          newElem.className = 'w-[400px] max-h-[300px] object-contain relative bg-black'; // Apply class directly here
 
           const videoElem = document.createElement('video');
           videoElem.setAttribute('id', remoteProducerId);
@@ -343,7 +343,7 @@ export default function Home() {
 
       <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
         <div className="flex flex-wrap gap-4 justify-center w-full" ref={videoContainer}>
-          <div className="w-[300px] max-h-[200px] object-contain relative bg-black">
+          <div className="w-[400px] max-h-[300px] object-contain relative bg-black">
             <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
           </div>
         </div>
