@@ -61,41 +61,41 @@ export default function Home() {
 
   // Handle fullscreen video toggle
   const toggleFullscreen = (videoId: string) => {
-  const newFullscreenVideo = fullscreenVideo === videoId ? null : videoId;
-  setFullscreenVideo(newFullscreenVideo);
+    const newFullscreenVideo = fullscreenVideo === videoId ? null : videoId;
+    setFullscreenVideo(newFullscreenVideo);
 
-  if (newFullscreenVideo) {
-    // Adjust layout for fullscreen mode
-    if (gridContainer?.current) {
-      gridContainer.current.style.display = 'none';
-    }
-    if (thumbnailContainer?.current) {
-      thumbnailContainer.current.style.display = 'flex';
-      thumbnailContainer.current.style.flexDirection = 'column';
-      thumbnailContainer.current.style.width = '30%';
+    if (newFullscreenVideo) {
+      // Adjust layout for fullscreen mode
+      if (gridContainer?.current) {
+        gridContainer.current.style.display = 'none';
+      }
+      if (thumbnailContainer?.current) {
+        thumbnailContainer.current.style.display = 'flex';
+        thumbnailContainer.current.style.flexDirection = 'column';
+        thumbnailContainer.current.style.width = '30%';
 
-      // Move all videos except the fullscreen one to the thumbnail container
-      Array.from(gridContainer.current?.children || []).forEach((child) => {
-        if ((child as HTMLElement).id !== `grid-${newFullscreenVideo}`) {
-          thumbnailContainer.current?.appendChild(child);
-        }
-      });
-    }
-  } else {
-    // Reset layout to grid mode
-    if (gridContainer?.current) {
-      gridContainer.current.style.display = 'flex';
+        // Move all videos except the fullscreen one to the thumbnail container
+        Array.from(gridContainer.current?.children || []).forEach((child) => {
+          if ((child as HTMLElement).id !== `grid-${newFullscreenVideo}`) {
+            thumbnailContainer.current?.appendChild(child);
+          }
+        });
+      }
+    } else {
+      // Reset layout to grid mode
+      if (gridContainer?.current) {
+        gridContainer.current.style.display = 'flex';
 
-      // Move all videos back to the grid container
-      Array.from(thumbnailContainer.current?.children || []).forEach((child) => {
-        gridContainer.current?.appendChild(child);
-      });
+        // Move all videos back to the grid container
+        Array.from(thumbnailContainer.current?.children || []).forEach((child) => {
+          gridContainer.current?.appendChild(child);
+        });
+      }
+      if (thumbnailContainer?.current) {
+        thumbnailContainer.current.style.display = 'none';
+      }
     }
-    if (thumbnailContainer?.current) {
-      thumbnailContainer.current.style.display = 'none';
-    }
-  }
-};
+  };
   // Create video element for both grid and thumbnail containers
   const createVideoElement = (participantId: string, track: MediaStreamTrack, container: HTMLDivElement, isGrid: boolean = true) => {
     const newElem = document.createElement('div');
@@ -157,7 +157,7 @@ export default function Home() {
     });
   };
 
-  // Handle participant mute toggle
+  // Ensure mute/unmute icons update correctly
   const toggleParticipantMute = (participantId: string, event?: React.MouseEvent) => {
     if (event) {
       event.stopPropagation(); // Prevent fullscreen toggle when clicking mute button
@@ -480,6 +480,27 @@ export default function Home() {
     );
   };
 
+  // Updated logic for handling active video and main container
+  const toggleActiveVideo = (videoId: string) => {
+    const activeContainer = document.getElementById('active-video-container');
+    const mainContainer = document.getElementById('main-video-container');
+
+    if (!activeContainer || !mainContainer) return;
+
+    const currentActiveVideo = activeContainer.firstChild as HTMLElement | null;
+    const newActiveVideo = document.getElementById(videoId);
+
+    if (newActiveVideo) {
+      // Move current active video back to main container
+      if (currentActiveVideo) {
+        mainContainer.appendChild(currentActiveVideo);
+      }
+
+      // Move clicked video to active container
+      activeContainer.appendChild(newActiveVideo);
+    }
+  };
+
   useEffect(() => {
     if (!localVideo.current?.srcObject) {
       getLocalStream();
@@ -511,47 +532,25 @@ export default function Home() {
     };
   }, []);
 
+  // Ensure gridContainer and localVideo are properly added to the DOM
   return (
     <>
-      <div ref={audioContainer}></div>
-
       <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-        {fullscreenVideo ? (
-          <div className="flex gap-4 w-full h-[80vh]">
-            <div className="flex-[0.7] relative bg-black rounded-lg overflow-hidden">
-              <video
-                ref={fullscreenVideo === 'local' ? localVideo : undefined}
-                id={fullscreenVideo === 'local' ? 'local-video' : `fullscreen-${fullscreenVideo}`}
-                className="w-full h-full object-contain"
-                onClick={() => setFullscreenVideo(null)}
-                style={{ cursor: 'pointer' }}
-                autoPlay
-                playsInline
-                muted={fullscreenVideo === 'local' || (fullscreenVideo !== null && mutedParticipants.has(fullscreenVideo))}
-              />
-            </div>
+        {/* Active video container */}
+        <div id="active-video-container" className="w-full h-[70vh] bg-black rounded-lg overflow-hidden mb-4"></div>
 
-            <div className="flex-[0.3] flex flex-col gap-3 overflow-y-auto">
-              {fullscreenVideo !== 'local' && (
-                <div
-                  className="w-full aspect-video bg-black rounded cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative"
-                  onClick={() => toggleFullscreen('local')}>
-                  <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-cover" />
-                </div>
-              )}
+        {/* Main video container */}
+        <div id="main-video-container" ref={gridContainer} className="flex flex-wrap gap-4 justify-center w-full">
+          {/* Local video element */}
+          <div
+            id="local-video-container"
+            className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+            onClick={() => toggleActiveVideo('local-video-container')}>
+            <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
+          </div>
 
-              <div ref={thumbnailContainer} className="flex flex-col gap-3"></div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-4 justify-center w-full" ref={gridContainer}>
-            <div
-              className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-              onClick={() => toggleFullscreen('local')}>
-              <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
-            </div>
-          </div>
-        )}
+          {/* Add more video elements dynamically */}
+        </div>
 
         <div className="flex items-center gap-2 justify-center w-fit">
           <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
