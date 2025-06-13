@@ -244,17 +244,21 @@ export default function Home() {
         if (params.kind === 'audio') {
           const audioElem = document.createElement('audio');
           audioElem.setAttribute('id', remoteProducerId);
-          audioElem.setAttribute('autoplay', '');
+          audioElem.setAttribute('autoplay', 'true');
+          audioElem.setAttribute('controls', 'true');
+          audioElem.muted = true; // Mute by default for autoplay in Firefox
           newElem.appendChild(audioElem);
           audioContainer.current.appendChild(newElem);
         } else {
-          newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black'; // Apply class directly here
+          newElem.className = 'w-[300px] max-h-[200px] object-contain relative bg-black';
 
           const videoElem = document.createElement('video');
           videoElem.setAttribute('id', remoteProducerId);
-          videoElem.setAttribute('autoplay', '');
-          videoElem.setAttribute('playsinline', '');
-          videoElem.className = 'w-full h-full object-contain bg-black'; // Apply class directly here
+          videoElem.setAttribute('autoplay', 'true');
+          videoElem.setAttribute('playsinline', 'true');
+          videoElem.setAttribute('controls', 'true');
+          videoElem.muted = true; // Mute by default for autoplay in Firefox
+          videoElem.className = 'w-full h-full object-contain bg-black';
           newElem.appendChild(videoElem);
           videoContainer.current.appendChild(newElem);
         }
@@ -263,6 +267,11 @@ export default function Home() {
         const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
         if (mediaElement) {
           mediaElement.srcObject = new MediaStream([track]);
+
+          // Explicitly try to play for Firefox compatibility
+          mediaElement.play().catch((error) => {
+            console.log('Autoplay prevented, user interaction required:', error);
+          });
         }
 
         socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId });
