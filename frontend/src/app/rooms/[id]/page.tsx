@@ -62,7 +62,11 @@ export default function Home() {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: { width: { min: 300, max: 300 }, height: { min: 200, max: 200 } },
+        video: {
+          width: { ideal: 300 },
+          height: { ideal: 200 },
+          facingMode: 'user',
+        },
       })
       .then((stream) => {
         if (localVideo.current) {
