@@ -61,40 +61,41 @@ export default function Home() {
 
   // Handle fullscreen video toggle
   const toggleFullscreen = (videoId: string) => {
-    const newFullscreenVideo = fullscreenVideo === videoId ? null : videoId;
-    setFullscreenVideo(newFullscreenVideo);
+  const newFullscreenVideo = fullscreenVideo === videoId ? null : videoId;
+  setFullscreenVideo(newFullscreenVideo);
 
-    if (newFullscreenVideo) {
-      // Adjust layout for fullscreen mode
-      if (gridContainer.current) {
-        gridContainer.current.style.display = 'none';
-      }
-      if (thumbnailContainer.current) {
-        thumbnailContainer.current.style.display = 'flex';
-        thumbnailContainer.current.style.flexDirection = 'column';
-        thumbnailContainer.current.style.width = '30%';
-
-        // Ensure all videos are visible in the thumbnail container
-        Array.from(thumbnailContainer.current.children).forEach((child) => {
-          (child as HTMLElement).style.display = 'block';
-        });
-      }
-    } else {
-      // Reset layout to grid mode
-      if (gridContainer.current) {
-        gridContainer.current.style.display = 'flex';
-
-        // Ensure all videos are visible in the grid container
-        Array.from(gridContainer.current.children).forEach((child) => {
-          (child as HTMLElement).style.display = 'block';
-        });
-      }
-      if (thumbnailContainer.current) {
-        thumbnailContainer.current.style.display = 'none';
-      }
+  if (newFullscreenVideo) {
+    // Adjust layout for fullscreen mode
+    if (gridContainer?.current) {
+      gridContainer.current.style.display = 'none';
     }
-  };
+    if (thumbnailContainer?.current) {
+      thumbnailContainer.current.style.display = 'flex';
+      thumbnailContainer.current.style.flexDirection = 'column';
+      thumbnailContainer.current.style.width = '30%';
 
+      // Move all videos except the fullscreen one to the thumbnail container
+      Array.from(gridContainer.current?.children || []).forEach((child) => {
+        if ((child as HTMLElement).id !== `grid-${newFullscreenVideo}`) {
+          thumbnailContainer.current?.appendChild(child);
+        }
+      });
+    }
+  } else {
+    // Reset layout to grid mode
+    if (gridContainer?.current) {
+      gridContainer.current.style.display = 'flex';
+
+      // Move all videos back to the grid container
+      Array.from(thumbnailContainer.current?.children || []).forEach((child) => {
+        gridContainer.current?.appendChild(child);
+      });
+    }
+    if (thumbnailContainer?.current) {
+      thumbnailContainer.current.style.display = 'none';
+    }
+  }
+};
   // Create video element for both grid and thumbnail containers
   const createVideoElement = (participantId: string, track: MediaStreamTrack, container: HTMLDivElement, isGrid: boolean = true) => {
     const newElem = document.createElement('div');
