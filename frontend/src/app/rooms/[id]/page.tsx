@@ -298,18 +298,18 @@ export default function Home() {
     setActiveVideoId((prev) => (prev === id ? null : id));
   };
 
-  const toggleMuteVideo = (id: string) => {
-    setConsumers((prev) =>
-      prev.map((consumer) => {
-        if (consumer.id === id) {
-          const newTrack = consumer.track.clone();
-          newTrack.enabled = !newTrack.enabled;
-          return { id: consumer.id, track: newTrack };
-        }
-        return consumer;
-      }),
-    );
-  };
+  // const toggleMuteVideo = (id: string) => {
+  //   setConsumers((prev) =>
+  //     prev.map((consumer) => {
+  //       if (consumer.id === id) {
+  //         const newTrack = consumer.track.clone();
+  //         newTrack.enabled = !newTrack.enabled;
+  //         return { id: consumer.id, track: newTrack };
+  //       }
+  //       return consumer;
+  //     }),
+  //   );
+  // };
 
   useEffect(() => {
     if (!localVideo.current?.srcObject) {
@@ -352,6 +352,26 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
+      <>
+        {consumers
+          .filter((consumer) => consumer.track.kind === 'audio')
+          .map((consumer) => (
+            <div key={consumer.id} className="w-full max-w-md">
+              <audio 
+                id={consumer.id}
+                autoPlay
+                playsInline
+                muted={consumer.id === 'local'}
+                className="w-full h-full object-contain"
+                ref={(audio) => {
+                  if (audio && consumer.track.kind === 'audio') {
+                    audio.srcObject = new MediaStream([consumer.track]);
+                  }
+                }}></audio>
+            </div>
+          ))}
+      </>
+
       {activeVideoId ? (
         <div className="flex gap-4 w-full h-[80vh]">
           {/* Active video - 70% width */}
@@ -374,6 +394,7 @@ export default function Home() {
           <div className="flex-[0.3] flex flex-col gap-3 overflow-y-auto">
             {consumers
               .filter((c) => c.id !== activeVideoId)
+              .filter((consumer) => consumer.track.kind === 'video')
               .map((consumer) => (
                 <div
                   key={consumer.id}
@@ -389,72 +410,33 @@ export default function Home() {
                       if (video && consumer.track.kind === 'video') {
                         video.srcObject = new MediaStream([consumer.track]);
                       }
-                    }}
-                  ></video>
-                  {consumer.track.kind === 'audio' && (
-                    <audio
-                      id={`audio-${consumer.id}`}
-                      autoPlay
-                      controls={false}
-                      ref={(audio) => {
-                        if (audio) {
-                          audio.srcObject = new MediaStream([consumer.track]);
-                        }
-                      }}
-                    ></audio>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering parent click event
-                      toggleMuteVideo(consumer.id);
-                    }}
-                    className="absolute bottom-2 right-2 bg-gray-800 text-white p-1 rounded">
-                    {consumer.track.enabled ? 'Mute' : 'Unmute'}
-                  </button>
+                    }}></video>
                 </div>
               ))}
           </div>
         </div>
       ) : (
         <div className="flex flex-wrap gap-4 justify-center w-full">
-          {consumers.map((consumer) => (
-            <div
-              key={consumer.id}
-              className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-              onClick={() => toggleActiveVideo(consumer.id)}>
-              <video
-                id={`video-${consumer.id}`}
-                autoPlay
-                playsInline
-                muted={consumer.id === 'local'}
-                className="w-full h-full object-contain"
-                ref={(video) => {
-                  if (video && consumer.track.kind === 'video') {
-                    video.srcObject = new MediaStream([consumer.track]);
-                  }
-                }}></video>
-              {consumer.track.kind === 'audio' && (
-                <audio
-                  id={`audio-${consumer.id}`}
+          {consumers
+            .filter((consumer) => consumer.track.kind === 'video')
+            .map((consumer) => (
+              <div
+                key={consumer.id}
+                className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+                onClick={() => toggleActiveVideo(consumer.id)}>
+                <video
+                  id={`video-${consumer.id}`}
                   autoPlay
-                  controls={false}
-                  ref={(audio) => {
-                    if (audio) {
-                      audio.srcObject = new MediaStream([consumer.track]);
+                  playsInline
+                  muted={consumer.id === 'local'}
+                  className="w-full h-full object-contain"
+                  ref={(video) => {
+                    if (video && consumer.track.kind === 'video') {
+                      video.srcObject = new MediaStream([consumer.track]);
                     }
-                  }}
-                ></audio>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering parent click event
-                  toggleMuteVideo(consumer.id);
-                }}
-                className="absolute bottom-2 right-2 bg-gray-800 text-white p-1 rounded">
-                {consumer.track.enabled ? 'Mute' : 'Unmute'}
-              </button>
-            </div>
-          ))}
+                  }}></video>
+              </div>
+            ))}
         </div>
       )}
 
