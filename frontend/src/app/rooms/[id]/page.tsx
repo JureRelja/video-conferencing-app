@@ -479,7 +479,7 @@ export default function Home() {
                 });
               }
             }}>
-            {isMuteAll ? 'Uključi zvuk svima' : 'Isključi zvuk svima'}
+            {isMuteAll ? 'Uključi zvuk' : 'Isključi zvuk'}
           </button>
         </div>
 
