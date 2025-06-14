@@ -302,17 +302,11 @@ export default function Home() {
     }
 
     socket.on('producer-closed', ({ remoteProducerId }: { remoteProducerId: string }) => {
-      const consumerTransportData = consumerTransportsRef.current.find((data) => data.producerId === remoteProducerId);
-      if (consumerTransportData) {
-        consumerTransportData.consumerTransport.close();
-        consumerTransportData.consumer.close();
-        consumerTransportsRef.current = consumerTransportsRef.current.filter((data) => data.producerId !== remoteProducerId);
+      // Remove consumer from state
+      setConsumers((prev) => prev.filter((consumer) => consumer.id !== remoteProducerId));
 
-        const videoElement = document.getElementById(`td-${remoteProducerId}`);
-        if (videoElement) {
-          videoElement.remove();
-        }
-      }
+      // If the active video is the one being closed, reset active video
+      setActiveVideoId((prev) => (prev === remoteProducerId ? null : prev));
     });
 
     socket.on('new-producer', ({ producerId }: { producerId: string }) => signalNewConsumerTransport(producerId));
