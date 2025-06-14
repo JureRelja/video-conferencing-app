@@ -380,14 +380,29 @@ export default function Home() {
                   className="w-full aspect-video bg-black rounded cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative"
                   onClick={() => toggleActiveVideo(consumer.id)}>
                   <video
+                    id={`video-${consumer.id}`}
                     autoPlay
                     playsInline
+                    muted={consumer.id === 'local'}
                     className="w-full h-full object-cover"
                     ref={(video) => {
-                      if (video) {
+                      if (video && consumer.track.kind === 'video') {
                         video.srcObject = new MediaStream([consumer.track]);
                       }
-                    }}></video>
+                    }}
+                  ></video>
+                  {consumer.track.kind === 'audio' && (
+                    <audio
+                      id={`audio-${consumer.id}`}
+                      autoPlay
+                      controls={false}
+                      ref={(audio) => {
+                        if (audio) {
+                          audio.srcObject = new MediaStream([consumer.track]);
+                        }
+                      }}
+                    ></audio>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent triggering parent click event
@@ -408,14 +423,28 @@ export default function Home() {
               className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
               onClick={() => toggleActiveVideo(consumer.id)}>
               <video
+                id={`video-${consumer.id}`}
                 autoPlay
                 playsInline
+                muted={consumer.id === 'local'}
                 className="w-full h-full object-contain"
                 ref={(video) => {
-                  if (video) {
+                  if (video && consumer.track.kind === 'video') {
                     video.srcObject = new MediaStream([consumer.track]);
                   }
                 }}></video>
+              {consumer.track.kind === 'audio' && (
+                <audio
+                  id={`audio-${consumer.id}`}
+                  autoPlay
+                  controls={false}
+                  ref={(audio) => {
+                    if (audio) {
+                      audio.srcObject = new MediaStream([consumer.track]);
+                    }
+                  }}
+                ></audio>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent triggering parent click event
