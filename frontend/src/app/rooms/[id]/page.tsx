@@ -298,6 +298,19 @@ export default function Home() {
     setActiveVideoId((prev) => (prev === id ? null : id));
   };
 
+  const toggleMuteVideo = (id: string) => {
+    setConsumers((prev) =>
+      prev.map((consumer) => {
+        if (consumer.id === id) {
+          const newTrack = consumer.track.clone();
+          newTrack.enabled = !newTrack.enabled;
+          return { id: consumer.id, track: newTrack };
+        }
+        return consumer;
+      }),
+    );
+  };
+
   useEffect(() => {
     if (!localVideo.current?.srcObject) {
       getLocalStream();
@@ -377,6 +390,11 @@ export default function Home() {
                         video.srcObject = new MediaStream([consumer.track]);
                       }
                     }}></video>
+                  <button
+                    onClick={() => toggleMuteVideo(consumer.id)}
+                    className="absolute bottom-2 right-2 bg-gray-800 text-white p-1 rounded">
+                    {consumer.track.enabled ? 'Mute' : 'Unmute'}
+                  </button>
                 </div>
               ))}
           </div>
@@ -398,6 +416,11 @@ export default function Home() {
                     video.srcObject = new MediaStream([consumer.track]);
                   }
                 }}></video>
+              <button
+                onClick={() => toggleMuteVideo(consumer.id)}
+                className="absolute bottom-2 right-2 bg-gray-800 text-white p-1 rounded">
+                {consumer.track.enabled ? 'Mute' : 'Unmute'}
+              </button>
             </div>
           ))}
         </div>
