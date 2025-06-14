@@ -359,7 +359,6 @@ export default function Home() {
             <video
               autoPlay
               playsInline
-              muted
               className="w-full h-full object-contain"
               ref={(video) => {
                 if (video) {
@@ -383,7 +382,6 @@ export default function Home() {
                   <video
                     autoPlay
                     playsInline
-                    muted
                     className="w-full h-full object-cover"
                     ref={(video) => {
                       if (video) {
@@ -412,7 +410,6 @@ export default function Home() {
               <video
                 autoPlay
                 playsInline
-                muted
                 className="w-full h-full object-contain"
                 ref={(video) => {
                   if (video) {
