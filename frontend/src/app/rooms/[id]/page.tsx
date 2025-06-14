@@ -39,7 +39,7 @@ export default function Home() {
   const { id } = useParams<{ id: string }>();
 
   const deviceRef = useRef<Device | null>(null);
-  // const audioContainer = useRef<HTMLDivElement | null>(null);
+  const audioContainer = useRef<HTMLDivElement | null>(null);
 
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
@@ -53,6 +53,9 @@ export default function Home() {
 
   const [consumers, setConsumers] = useState<{ id: string; track: MediaStreamTrack }[]>([]);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [isMicrophoneOn, setIsMicrophoneOn] = useState(true);
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isMuteAll, setIsMuteAll] = useState(false);
 
   const getLocalStream = () => {
     // Check if mediaDevices is available
@@ -283,8 +286,8 @@ export default function Home() {
           audioElement.srcObject = new MediaStream([consumer.track]);
           audioElement.autoplay = true;
           audioElement.muted = false; // Ensure audio is not muted
-          document.body.appendChild(audioElement);
-        } 
+          audioContainer.current?.appendChild(audioElement);
+        }
 
         addConsumer(remoteProducerId, consumer.track);
 
@@ -306,18 +309,18 @@ export default function Home() {
     setActiveVideoId((prev) => (prev === id ? null : id));
   };
 
-  const toggleMuteVideo = (id: string) => {
-    setConsumers((prev) =>
-      prev.map((consumer) => {
-        if (consumer.id === id) {
-          const newTrack = consumer.track.clone();
-          newTrack.enabled = !newTrack.enabled;
-          return { id: consumer.id, track: newTrack };
-        }
-        return consumer;
-      }),
-    );
-  };
+  // const toggleMuteVideo = (id: string) => {
+  //   setConsumers((prev) =>
+  //     prev.map((consumer) => {
+  //       if (consumer.id === id) {
+  //         const newTrack = consumer.track.clone();
+  //         newTrack.enabled = !newTrack.enabled;
+  //         return { id: consumer.id, track: newTrack };
+  //       }
+  //       return consumer;
+  //     }),
+  //   );
+  // };
 
   useEffect(() => {
     if (!localVideo.current?.srcObject) {
@@ -359,7 +362,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
+    <div className="flex flex-col gap-6 justify-center items-center w-full p-4">
       {activeVideoId ? (
         <div className="flex gap-4 w-full h-[80vh]">
           {/* Active video - 70% width */}
@@ -428,15 +431,77 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 justify-center w-fit">
-        <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
-        <Button
-          onClick={() => {
-            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
-          }}>
-          Kopiraj link
-        </Button>
+      <div className="flex flex-col items-center gap-4 w-full">
+        {/* Controls for microphone and mute-all */}
+        <div className="flex gap-4 justify-center items-center mt-4">
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded"
+            onClick={() => {
+              if (videoParamsRef.current?.track) {
+                const newState = !videoParamsRef.current.track.enabled;
+                videoParamsRef.current.track.enabled = newState;
+                setIsCameraOn(newState);
+
+                consumers.forEach((consumer) => {
+                  if (consumer.id === 'local') {
+                    consumer.track.enabled = newState;
+                  }
+                });
+              }
+            }}>
+            {isCameraOn ? 'Isključi kameru' : 'Uključi kameru'}
+          </button>
+
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded"
+            onClick={() => {
+              if (audioParamsRef.current?.track) {
+                const newState = !audioParamsRef.current.track.enabled;
+                audioParamsRef.current.track.enabled = newState;
+                setIsMicrophoneOn(newState);
+              }
+            }}>
+            {isMicrophoneOn ? 'Isključi mikrofon' : 'Uključi mikrofon'}
+          </button>
+
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => {
+              const newState = !isMuteAll;
+              setIsMuteAll(newState);
+
+              const audioElement = audioContainer.current?.querySelectorAll('audio');
+              if (audioElement) {
+                audioElement.forEach((audio) => {
+                  if (audio instanceof HTMLAudioElement) {
+                    audio.muted = newState;
+                  }
+                });
+              }
+            }}>
+            {isMuteAll ? 'Uključi zvuk svima' : 'Isključi zvuk svima'}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 justify-center w-fit">
+          <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
+          <Button
+            onClick={() => {
+              navigator.clipboard
+                .writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`)
+                .then(() => {
+                  console.log('Link copied to clipboard');
+                })
+                .catch((error) => {
+                  console.error('Failed to copy link:', error);
+                });
+            }}>
+            Kopiraj link
+          </Button>
+        </div>
       </div>
+
+      <div ref={audioContainer}> </div>
     </div>
   );
 }
