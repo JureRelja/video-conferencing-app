@@ -39,7 +39,7 @@ export default function Home() {
   const { id } = useParams<{ id: string }>();
 
   const deviceRef = useRef<Device | null>(null);
-  const audioContainer = useRef<HTMLDivElement | null>(null);
+  // const audioContainer = useRef<HTMLDivElement | null>(null);
 
   const localVideo = useRef<HTMLVideoElement | null>(null);
 
@@ -80,7 +80,9 @@ export default function Home() {
         const videoTracks = stream.getVideoTracks();
 
         if (audioTracks.length > 0) {
-          audioParamsRef.current = { track: audioTracks[0], ...audioParamsRef.current };
+          const localAudioTrack = audioTracks[0];
+          localAudioTrack.enabled = false; // Mute local audio
+          audioParamsRef.current = { track: localAudioTrack, ...audioParamsRef.current };
         } else {
           console.warn('No audio track available');
         }
