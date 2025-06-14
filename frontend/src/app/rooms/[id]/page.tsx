@@ -1,7 +1,6 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -39,14 +38,7 @@ const params = {
 export default function Home() {
   const { id } = useParams<{ id: string }>();
 
-  // State for fullscreen video
-  const [fullscreenVideo, setFullscreenVideo] = useState<string | null>(null);
-  // State for muted participants
-  const [mutedParticipants, setMutedParticipants] = useState<Set<string>>(new Set());
-
   const deviceRef = useRef<Device | null>(null);
-  const gridContainer = useRef<HTMLDivElement | null>(null);
-  const thumbnailContainer = useRef<HTMLDivElement | null>(null);
   const audioContainer = useRef<HTMLDivElement | null>(null);
 
   const localVideo = useRef<HTMLVideoElement | null>(null);
@@ -59,149 +51,8 @@ export default function Home() {
   const audioParamsRef = useRef<any>(null);
   const videoParamsRef = useRef<any>({ params });
 
-  // Handle fullscreen video toggle
-  const toggleFullscreen = (videoId: string) => {
-    const newFullscreenVideo = fullscreenVideo === videoId ? null : videoId;
-    setFullscreenVideo(newFullscreenVideo);
-
-    if (newFullscreenVideo) {
-      // Adjust layout for fullscreen mode
-      if (gridContainer?.current) {
-        gridContainer.current.style.display = 'none';
-      }
-      if (thumbnailContainer?.current) {
-        thumbnailContainer.current.style.display = 'flex';
-        thumbnailContainer.current.style.flexDirection = 'column';
-        thumbnailContainer.current.style.width = '30%';
-
-        // Move all videos except the fullscreen one to the thumbnail container
-        Array.from(gridContainer.current?.children || []).forEach((child) => {
-          if ((child as HTMLElement).id !== `grid-${newFullscreenVideo}`) {
-            thumbnailContainer.current?.appendChild(child);
-          }
-        });
-      }
-    } else {
-      // Reset layout to grid mode
-      if (gridContainer?.current) {
-        gridContainer.current.style.display = 'flex';
-
-        // Move all videos back to the grid container
-        Array.from(thumbnailContainer.current?.children || []).forEach((child) => {
-          gridContainer.current?.appendChild(child);
-        });
-      }
-      if (thumbnailContainer?.current) {
-        thumbnailContainer.current.style.display = 'none';
-      }
-    }
-  };
-  // Create video element for both grid and thumbnail containers
-  const createVideoElement = (participantId: string, track: MediaStreamTrack, container: HTMLDivElement, isGrid: boolean = true) => {
-    const newElem = document.createElement('div');
-    const containerId = isGrid ? 'grid' : 'thumbnail';
-    newElem.setAttribute('id', `${containerId}-${participantId}`);
-
-    if (isGrid) {
-      newElem.className = 'w-[530px] max-h-[400px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all';
-    } else {
-      newElem.className =
-        'w-full aspect-video bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative rounded';
-    }
-
-    const videoElem = document.createElement('video');
-    videoElem.setAttribute('id', `${containerId}-video-${participantId}`);
-    videoElem.setAttribute('autoplay', 'true');
-    videoElem.setAttribute('playsinline', 'true');
-    videoElem.muted = mutedParticipants.has(participantId);
-    videoElem.className = isGrid ? 'w-full h-full object-contain bg-black' : 'w-full h-full object-cover bg-black';
-    videoElem.srcObject = new MediaStream([track]);
-
-    // Create mute button overlay
-    const muteButton = document.createElement('button');
-    muteButton.setAttribute('id', `mute-btn-${containerId}-${participantId}`);
-    muteButton.className = isGrid
-      ? 'absolute top-2 right-2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-90 transition-all z-10'
-      : 'absolute top-1 right-1 bg-black bg-opacity-70 text-white p-1 rounded-full hover:bg-opacity-90 transition-all z-10';
-
-    const updateMuteButton = () => {
-      const isMuted = mutedParticipants.has(participantId);
-      const iconSize = isGrid ? '20' : '16';
-      muteButton.innerHTML = isMuted
-        ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
-             <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-           </svg>`
-        : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
-             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-           </svg>`;
-    };
-
-    updateMuteButton();
-
-    // Add click handler for mute toggle
-    muteButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      toggleParticipantMute(participantId);
-    });
-
-    // Add click handler for fullscreen toggle
-    newElem.addEventListener('click', () => toggleFullscreen(participantId));
-
-    newElem.appendChild(videoElem);
-    newElem.appendChild(muteButton);
-    container.appendChild(newElem);
-
-    // Try to play video
-    videoElem.play().catch((error) => {
-      console.log('Autoplay prevented, user interaction required:', error);
-    });
-  };
-
-  // Ensure mute/unmute icons update correctly
-  const toggleParticipantMute = (participantId: string, event?: React.MouseEvent) => {
-    if (event) {
-      event.stopPropagation(); // Prevent fullscreen toggle when clicking mute button
-    }
-
-    const newMutedParticipants = new Set(mutedParticipants);
-    if (mutedParticipants.has(participantId)) {
-      newMutedParticipants.delete(participantId);
-    } else {
-      newMutedParticipants.add(participantId);
-    }
-    setMutedParticipants(newMutedParticipants);
-
-    const isMuted = newMutedParticipants.has(participantId);
-
-    // Apply mute state to all video elements for this participant
-    const gridVideo = document.getElementById(`grid-video-${participantId}`) as HTMLVideoElement | null;
-    const thumbnailVideo = document.getElementById(`thumbnail-video-${participantId}`) as HTMLVideoElement | null;
-    const fullscreenVideo = document.getElementById(`fullscreen-${participantId}`) as HTMLVideoElement | null;
-
-    [gridVideo, thumbnailVideo, fullscreenVideo].forEach((video) => {
-      if (video) {
-        video.muted = isMuted;
-      }
-    });
-
-    // Update all mute buttons for this participant
-    const gridMuteBtn = document.getElementById(`mute-btn-grid-${participantId}`) as HTMLButtonElement | null;
-    const thumbnailMuteBtn = document.getElementById(`mute-btn-thumbnail-${participantId}`) as HTMLButtonElement | null;
-
-    [gridMuteBtn, thumbnailMuteBtn].forEach((btn) => {
-      if (btn) {
-        const isGrid = btn.id.includes('grid');
-        const iconSize = isGrid ? '20' : '16';
-        btn.innerHTML = isMuted
-          ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
-               <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-             </svg>`
-          : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="currentColor">
-               <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-             </svg>`;
-      }
-    });
-  };
+  const [consumers, setConsumers] = useState<{ id: string; track: MediaStreamTrack }[]>([]);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   const getLocalStream = () => {
     // Check if mediaDevices is available
@@ -214,7 +65,7 @@ export default function Home() {
       .getUserMedia({
         audio: true,
         video: {
-          width: { ideal: 530 },
+          width: { ideal: 400 },
           height: { ideal: 300 },
           facingMode: 'user',
         },
@@ -266,7 +117,7 @@ export default function Home() {
     socket.emit('joinRoom', { roomName: id }, (data: { rtpCapabilities: any }) => {
       console.log(`Router RTP Capabilities: ${data.rtpCapabilities}`);
       rtpCapabilitiesRef.current = data.rtpCapabilities;
-      void createDevice(data.rtpCapabilities);
+      createDevice(data.rtpCapabilities);
     });
   };
 
@@ -324,7 +175,7 @@ export default function Home() {
         }
       });
 
-      void connectSendTransport();
+      connectSendTransport();
     });
   };
 
@@ -425,80 +276,24 @@ export default function Home() {
           consumer,
         });
 
-        if (!gridContainer.current || !audioContainer.current) return;
+        addConsumer(remoteProducerId, consumer.track);
 
-        if (params.kind === 'audio') {
-          const newElem = document.createElement('div');
-          newElem.setAttribute('id', `audio-${remoteProducerId}`);
-
-          const audioElem = document.createElement('audio');
-          audioElem.setAttribute('id', remoteProducerId);
-          audioElem.setAttribute('autoplay', 'true');
-          audioElem.muted = false; // Don't mute remote audio - users want to hear other participants
-          newElem.appendChild(audioElem);
-          audioContainer.current.appendChild(newElem);
-        } else {
-          const { track } = consumer;
-
-          // Create video element in grid container
-          if (gridContainer.current) {
-            createVideoElement(remoteProducerId, track, gridContainer.current, true);
-          }
-
-          // Create video element in thumbnail container
-          if (thumbnailContainer.current) {
-            createVideoElement(remoteProducerId, track, thumbnailContainer.current, false);
-          }
-        }
-
-        const { track } = consumer;
-
-        // Set up audio element
-        if (params.kind === 'audio') {
-          const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
-          if (mediaElement) {
-            mediaElement.srcObject = new MediaStream([track]);
-            mediaElement.play().catch((error) => {
-              console.log('Autoplay prevented, user interaction required:', error);
-            });
-          }
-        }
-
-        // Set up fullscreen video source if this is the fullscreen video
-        const fullscreenElement = document.getElementById(`fullscreen-${remoteProducerId}`) as HTMLMediaElement;
-        if (fullscreenElement) {
-          fullscreenElement.srcObject = new MediaStream([track]);
-          fullscreenElement.play().catch((error) => {
-            console.log('Fullscreen autoplay prevented:', error);
-          });
+        const mediaElement = document.getElementById(remoteProducerId) as HTMLMediaElement;
+        if (mediaElement) {
+          mediaElement.srcObject = new MediaStream([consumer.track]);
         }
 
         socket.emit('consumer-resume', { serverConsumerId: params.serverConsumerId });
-
-        console.log('Consumer resume');
       },
     );
   };
 
-  // Updated logic for handling active video and main container
-  const toggleActiveVideo = (videoId: string) => {
-    const activeContainer = document.getElementById('active-video-container');
-    const mainContainer = document.getElementById('main-video-container');
+  const addConsumer = (id: string, track: MediaStreamTrack) => {
+    setConsumers((prev) => [...prev, { id, track }]);
+  };
 
-    if (!activeContainer || !mainContainer) return;
-
-    const currentActiveVideo = activeContainer.firstChild as HTMLElement | null;
-    const newActiveVideo = document.getElementById(videoId);
-
-    if (newActiveVideo) {
-      // Move current active video back to main container
-      if (currentActiveVideo) {
-        mainContainer.appendChild(currentActiveVideo);
-      }
-
-      // Move clicked video to active container
-      activeContainer.appendChild(newActiveVideo);
-    }
+  const toggleActiveVideo = (id: string) => {
+    setActiveVideoId((prev) => (prev === id ? null : id));
   };
 
   useEffect(() => {
@@ -513,14 +308,10 @@ export default function Home() {
         consumerTransportData.consumer.close();
         consumerTransportsRef.current = consumerTransportsRef.current.filter((data) => data.producerId !== remoteProducerId);
 
-        // Remove elements from both containers
-        const gridElement = document.getElementById(`grid-${remoteProducerId}`);
-        const thumbnailElement = document.getElementById(`thumbnail-${remoteProducerId}`);
-        const audioElement = document.getElementById(`audio-${remoteProducerId}`);
-
-        if (gridElement) gridElement.remove();
-        if (thumbnailElement) thumbnailElement.remove();
-        if (audioElement) audioElement.remove();
+        const videoElement = document.getElementById(`td-${remoteProducerId}`);
+        if (videoElement) {
+          videoElement.remove();
+        }
       }
     });
 
@@ -532,36 +323,83 @@ export default function Home() {
     };
   }, []);
 
-  // Ensure gridContainer and localVideo are properly added to the DOM
   return (
-    <>
-      <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-        {/* Active video container */}
-        <div id="active-video-container" className="w-full h-[70vh] bg-black rounded-lg overflow-hidden mb-4"></div>
+    <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
+      <div ref={audioContainer}></div>
 
-        {/* Main video container */}
-        <div id="main-video-container" ref={gridContainer} className="flex flex-wrap gap-4 justify-center w-full">
-          {/* Local video element */}
-          <div
-            id="local-video-container"
-            className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-            onClick={() => toggleActiveVideo('local-video-container')}>
-            <video ref={localVideo} autoPlay playsInline muted className="w-full h-full object-contain bg-black"></video>
+      {activeVideoId ? (
+        <div className="flex gap-4 w-full h-[80vh]">
+          {/* Active video - 70% width */}
+          <div className="flex-[0.7] relative bg-black rounded-lg overflow-hidden">
+            <video
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-contain"
+              ref={(video) => {
+                if (video) {
+                  const track = consumers.find((c) => c.id === activeVideoId)?.track;
+                  if (track) {
+                    video.srcObject = new MediaStream([track]);
+                  }
+                }
+              }}></video>
           </div>
 
-          {/* Add more video elements dynamically */}
+          {/* Sidebar with other videos - 30% width */}
+          <div className="flex-[0.3] flex flex-col gap-3 overflow-y-auto">
+            {consumers
+              .filter((c) => c.id !== activeVideoId)
+              .map((consumer) => (
+                <div
+                  key={consumer.id}
+                  className="w-full aspect-video bg-black rounded cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all overflow-hidden relative"
+                  onClick={() => toggleActiveVideo(consumer.id)}>
+                  <video
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    ref={(video) => {
+                      if (video) {
+                        video.srcObject = new MediaStream([consumer.track]);
+                      }
+                    }}></video>
+                </div>
+              ))}
+          </div>
         </div>
+      ) : (
+        <div className="flex flex-wrap gap-4 justify-center w-full">
+          {consumers.map((consumer) => (
+            <div
+              key={consumer.id}
+              className="w-[530px] max-h-[300px] object-contain relative bg-black cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+              onClick={() => toggleActiveVideo(consumer.id)}>
+              <video
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-contain"
+                ref={(video) => {
+                  if (video) {
+                    video.srcObject = new MediaStream([consumer.track]);
+                  }
+                }}></video>
+            </div>
+          ))}
+        </div>
+      )}
 
-        <div className="flex items-center gap-2 justify-center w-fit">
-          <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
-          <Button
-            onClick={() => {
-              void navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
-            }}>
-            Kopiraj link
-          </Button>
-        </div>
+      <div className="flex items-center gap-2 justify-center w-fit">
+        <Input value={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`} readOnly className="border-gray-400 border-2 bg-white p-2" />
+        <Button
+          onClick={() => {
+            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/rooms/${id}`);
+          }}>
+          Kopiraj link
+        </Button>
       </div>
-    </>
+    </div>
   );
 }
