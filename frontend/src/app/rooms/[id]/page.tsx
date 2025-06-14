@@ -391,7 +391,10 @@ export default function Home() {
                       }
                     }}></video>
                   <button
-                    onClick={() => toggleMuteVideo(consumer.id)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering parent click event
+                      toggleMuteVideo(consumer.id);
+                    }}
                     className="absolute bottom-2 right-2 bg-gray-800 text-white p-1 rounded">
                     {consumer.track.enabled ? 'Mute' : 'Unmute'}
                   </button>
@@ -417,7 +420,10 @@ export default function Home() {
                   }
                 }}></video>
               <button
-                onClick={() => toggleMuteVideo(consumer.id)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering parent click event
+                  toggleMuteVideo(consumer.id);
+                }}
                 className="absolute bottom-2 right-2 bg-gray-800 text-white p-1 rounded">
                 {consumer.track.enabled ? 'Mute' : 'Unmute'}
               </button>
