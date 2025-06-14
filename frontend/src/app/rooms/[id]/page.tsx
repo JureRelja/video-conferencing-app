@@ -317,10 +317,26 @@ export default function Home() {
     };
   }, []);
 
+  // Ensure local video stream is displayed immediately upon entering the room
+  useEffect(() => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+          setConsumers((prev) => [...prev, { id: 'local', track: videoTrack }]);
+
+          // Assign stream to local video element
+          if (localVideo.current) {
+            localVideo.current.srcObject = stream;
+          }
+        }
+      })
+      .catch((error) => console.error('Error accessing media devices:', error));
+  }, []);
+
   return (
     <div className="flex flex-col gap-14 justify-center items-center w-full p-4">
-      <div ref={audioContainer}></div>
-
       {activeVideoId ? (
         <div className="flex gap-4 w-full h-[80vh]">
           {/* Active video - 70% width */}
